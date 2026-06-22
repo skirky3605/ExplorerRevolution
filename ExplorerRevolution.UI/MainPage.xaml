@@ -4,16 +4,20 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-  Background="{StaticResource ControlFillColorDefaultBrush}"
+  Background="Transparent"
   mc:Ignorable="d">
 
-  <StackPanel
-    HorizontalAlignment="Center"
+  <StackPanel 
+    HorizontalAlignment="Stretch"
     VerticalAlignment="Center"
     Orientation="Vertical">
+        <Frame Name="frame1" HorizontalAlignment="Stretch">
+            
+        </Frame>
     <TextBlock Style="{StaticResource DisplayTextBlockStyle}" Text="Mile.Xaml ❤ .NET Framework" />
     <TextBlock Text="{x:Bind FrameworkDescription}" />
     <TextBlock>Native Backend</TextBlock>
-    <Button Click="Button_Click">Click Me</Button>
-  </StackPanel>
+        <Button Click="Button_Click">Click Me</Button>
+        <Button Click="Button_Click_1">Click Me1</Button>
+    </StackPanel>
 </Page>

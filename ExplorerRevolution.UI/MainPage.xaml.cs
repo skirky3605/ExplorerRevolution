@@ -1,7 +1,12 @@
-﻿using System;
+﻿using ExplorerRevolution.UI;
+using System;
 using System.Runtime.InteropServices;
+using System.Security.Policy;
+using Windows.Gaming.Input.ForceFeedback;
+using Windows.Media.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 
 namespace MileXamlBlankAppNetFrameworkModern
 {
@@ -12,11 +17,12 @@ namespace MileXamlBlankAppNetFrameworkModern
         public MainPage()
         {
             InitializeComponent();
+            frame1.Navigate(typeof(TaskBar));
         }
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            var contentDialog = new ContentDialog
+            /*var contentDialog = new ContentDialog
             {
 
                 Title = "Hello world",
@@ -24,7 +30,15 @@ namespace MileXamlBlankAppNetFrameworkModern
                 PrimaryButtonText = "OK",
                 XamlRoot = (sender as Button).XamlRoot,
             };
-            await contentDialog.ShowAsync();
+            await contentDialog.ShowAsync();*/
+
+            (frame1.Content as TaskBar).AddAppButton(0, new Windows.UI.Xaml.Media.Imaging.BitmapImage(new Uri("D:\\A2778\\Pictures\\图标\\WinUI\\AnimationInterop.png")), "结束");
+            (frame1.Content as TaskBar).AddAppButton(0, new Windows.UI.Xaml.Media.Imaging.BitmapImage(new Uri("D:\\A2778\\Pictures\\图标\\WinUI\\AutomationProperties.png")), "结束");
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            (frame1.Content as TaskBar).SetHighlightButton(1); 
         }
     }
 }
