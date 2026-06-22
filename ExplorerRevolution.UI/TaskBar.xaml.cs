@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel.Email.DataProvider;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Media.Core;
@@ -41,7 +41,8 @@ namespace ExplorerRevolution.UI
         {
             if (index < TaskBarStack.Children.Count() && index >= 0)
             {
-                ((TaskBarStack.Children[index] as Grid).Children[0] as Button).Background = new Brush;
+
+                ((TaskBarStack.Children[index] as Grid).Children[0] as Button).ClearValue(Button.BackgroundProperty);
             }
 
             for (int i = 0; i < TaskBarStack.Children.Count(); i++)
