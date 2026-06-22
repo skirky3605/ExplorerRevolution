@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <TargetPlatformVersion>10.0.26100.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <LangVersion>latest</LangVersion>
+    <ApplicationManifest>App.manifest</ApplicationManifest>
+    <UseWindowsForms>true</UseWindowsForms>
+	<MileXamlManagedNoNativeBackend>true</MileXamlManagedNoNativeBackend>
+	<!-- Add workaround for WinRT support in the old .NET SDK -->
+    <SupportedOSPlatformVersion>$(TargetPlatformMinVersion)</SupportedOSPlatformVersion>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.26100.7175" />
+    <PackageReference Include="Mile.Xaml" Version="2.5.1616" />	
+    <PackageReference Include="System.Numerics.Vectors" Version="4.6.1" />
+  </ItemGroup>
+
+</Project>
