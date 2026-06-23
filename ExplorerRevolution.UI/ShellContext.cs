@@ -42,6 +42,7 @@ namespace ExplorerRevolution.UI
             DesktopForm.Bounds = Screen.PrimaryScreen.Bounds;
             DesktopForm.BackColor = Color.LimeGreen;
             DesktopForm.TransparencyKey = Color.LimeGreen;
+            DesktopForm.ShowInTaskbar = false;
 
             Common.HookExplorer.AttachToWorkerW(DesktopForm.Handle);
 
@@ -61,6 +62,7 @@ namespace ExplorerRevolution.UI
             TaskBarForm.BackColor = Color.LimeGreen;
             TaskBarForm.TransparencyKey = Color.LimeGreen;
             TaskBarForm.TopMost = true;
+            TaskBarForm.ShowInTaskbar = false;
 
             TaskBarForm.Show();
 
