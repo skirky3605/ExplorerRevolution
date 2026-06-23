@@ -27,6 +27,8 @@ namespace ExplorerRevolution
             Common.KeyInputHandler.Install();
             #endregion
 
+            Common.Helpers.SetMicaBackdrop(MainForm.Handle);
+
             Application.Run(MainForm);
             AppDomain.CurrentDomain.ProcessExit += (s, e) =>
             {

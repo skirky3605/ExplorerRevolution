@@ -18,5 +18,19 @@ namespace ExplorerRevolution
             xamlHost.Dock = DockStyle.Fill;
             xamlHost.Child = new MainPage();
         }
+
+        protected override void WndProc(ref Message m)
+        {
+            const int WM_ACTIVATE = 0x0006;
+
+            if (m.Msg == WM_ACTIVATE)
+            {
+                // 强制忽略 inactive 状态
+                m.Result = IntPtr.Zero;
+                return;
+            }
+
+            base.WndProc(ref m);
+        }
     }
 }
