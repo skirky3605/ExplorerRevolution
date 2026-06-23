@@ -9,7 +9,7 @@
     Background="Transparent">
 
     <Grid  >
-        <Grid Name="TaskBarGrid" Loaded="TaskBarGrid_Loaded" Background="{ThemeResource SystemControlAcrylicElementBrush}" CornerRadius="1">
+        <Grid Name="TaskBarGrid" Loaded="TaskBarGrid_Loaded" Background="{ThemeResource SystemControlAcrylicElementBrush}" CornerRadius="1" Height="48">
             <Button Background="Transparent" IsEnabled="False" CornerRadius="0" VerticalAlignment="Top" HorizontalAlignment="Stretch" Height="2" BorderThickness="2" Margin="0,0,0,0"/>
             <StackPanel Name="TaskBarStack" Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Height="48">
                 <StackPanel.Transitions >
@@ -18,6 +18,53 @@
                     </TransitionCollection>
                 </StackPanel.Transitions>
 
+            </StackPanel>
+            <Grid Name="TbLeftBottomArea">
+                <StackPanel Name="TbRbLeftBottomAreaStk" VerticalAlignment="Stretch" Margin="4,0,4,0">
+                    <TextBlock Text="左下角预留空间" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+            <StackPanel Name="TaskBarRightBottomStack" Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Right" Height="48">
+                
+                <Grid Name="TbRbBkgAppArea" Width="36">
+                    <Grid.Transitions >
+                        <TransitionCollection>
+                            <RepositionThemeTransition/>
+                        </TransitionCollection>
+                    </Grid.Transitions>
+                    <Button CornerRadius="8" IsTabStop="False" Name="Button_TbRbBkgAppArea_Behind"  BorderBrush="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,3,2,3" Background="Transparent"/>
+                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE010;" FontSize="12" >
+                        <FontIcon.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform/>
+                                <RotateTransform/>
+                            </TransformGroup>
+                        </FontIcon.RenderTransform>
+                        
+                    </FontIcon>
+                    <Button CornerRadius="8" Click="Button_TbRbBkgAppArea_Front_Click" FontFamily="HarmonyOS Sans SC" Name="Button_TbRbBkgAppArea_Front" BorderBrush="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,3,2,3" Opacity="0.4"  Background="Transparent"/>
+                </Grid>
+                <Grid Name="TbRbKeyBoardArea">
+                    <StackPanel Name="TbRbKeyBoardAreaStk" VerticalAlignment="Stretch" Margin="4,0,4,0">
+                        <TextBlock Text="拼" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+                <Grid Name="TbRbStatusArea">
+                    <Button CornerRadius="8" IsTabStop="False" Name="Button_TbRbStatusArea_Behind"  BorderBrush="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,3,2,3" Background="Transparent"/>
+                    <StackPanel Name="TbRbStatusAreaStk" VerticalAlignment="Stretch" Margin="6,0,6,0">
+                        <TextBlock Text="控制中心" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button CornerRadius="8" Click="Button_TbRbStatusArea_Front_Click" FontFamily="HarmonyOS Sans SC" Name="Button_TbRbStatusArea_Front" BorderBrush="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,3,2,3" Opacity="0.4"  Background="Transparent"/>
+                </Grid>
+                <Grid Name="TbRbTimeArea" Width="76">
+                    <Button CornerRadius="8" IsTabStop="False" Name="Button_TbRbTimeArea_Behind"  BorderBrush="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,3,2,3" Background="Transparent"/>
+                    <TextBlock FontFamily="HarmonyOS Sans SC" Name="TbRbTime" Text="00:00" FontSize="12" Margin="0,0,11,25" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
+                    <TextBlock FontFamily="HarmonyOS Sans SC" Name="TbRbDate" Text="2026/1/1" FontSize="12" Margin="0,0,11,9" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
+                    <Button CornerRadius="8" Click="Button_TbRbTimeArea_Front_Click" FontFamily="HarmonyOS Sans SC" Name="Button_TbRbTimeArea_Front" BorderBrush="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="2,3,2,3" Opacity="0.4"  Background="Transparent"/>
+                </Grid>
+                <Grid Name="TbRbShowDskArea" Width="8">
+                    <Button CornerRadius="0" Click="Button_TbRbShowDskArea_Front_Click" FontFamily="HarmonyOS Sans SC" Name="Button_TbRbShowDskArea_Front" BorderBrush="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,2,-1,-1" Opacity="0.8"  Background="Transparent" ToolTipService.ToolTip="显示桌面"/>
+                </Grid>
             </StackPanel>
         </Grid>
     </Grid>

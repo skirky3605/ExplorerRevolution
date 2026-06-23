@@ -205,5 +205,30 @@ namespace ExplorerRevolution.UI
             int index = TaskBarStack.Children.IndexOf(((sender as Button).Parent as Grid));
             SetHighlightButton(index);
         }
+
+        private void Button_TbRbTimeArea_Front_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Button_TbRbStatusArea_Front_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Button_TbRbShowDskArea_Front_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Button_TbRbBkgAppArea_Front_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Button_TbRbKeyBoardArea_Front_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
