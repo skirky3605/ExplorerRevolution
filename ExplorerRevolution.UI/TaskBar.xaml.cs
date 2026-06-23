@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -8,6 +9,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Media.Core;
 using Windows.UI;
+using Windows.UI.Composition;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -38,6 +40,9 @@ namespace ExplorerRevolution.UI
             {
 
                 ((TaskBarStack.Children[index] as Grid).Children[0] as Button).ClearValue(Button.BackgroundProperty);
+                var hostSel = (TaskBarStack.Children[index] as Grid).Children[1] as Grid;
+                var sbSel = hostSel?.Resources["AppStatus_Default"] as Storyboard;
+                sbSel?.Begin();
             }
 
             for (int i = 0; i < TaskBarStack.Children.Count(); i++)
@@ -45,6 +50,19 @@ namespace ExplorerRevolution.UI
                 if(i != index)
                 {
                     ((TaskBarStack.Children[i] as Grid).Children[0] as Button).Background = new SolidColorBrush(Colors.Transparent);
+                    
+                    if(true) //最小化
+                    {
+                        var host = (TaskBarStack.Children[i] as Grid).Children[1] as Grid;
+                        var sb = host?.Resources["AppStatus_DisabledVisible"] as Storyboard;
+                        sb?.Begin();
+                    }
+                    else //固定且关闭
+                    {
+                        var host = (TaskBarStack.Children[i] as Grid).Children[1] as Grid;
+                        var sb = host?.Resources["AppStatus_DisabledHidden"] as Storyboard;
+                        sb?.Begin();
+                    }
                 }
             }
         }
@@ -54,15 +72,24 @@ namespace ExplorerRevolution.UI
             return -1;
         }
 
+        public bool showButtonTag = true;
+        public void RefreshTbPreferences()
+        {
+            for (int i = 0; i < TaskBarStack.Children.Count(); i++)
+            {
+                (((TaskBarStack.Children[i] as Grid).Children[2] as StackPanel).Children[1] as TextBlock).Visibility = showButtonTag ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
         public void AddAppButton(int index, BitmapImage imageSource, string appTitle)
         {
             var stackPanel = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
-                Margin = new Thickness(8, 0, 8, 1),
+                Margin = new Thickness(5, 0, 5, 1),
             };
-            stackPanel.Children.Add(new Image { Width = 28, Height = 28, Stretch = Stretch.Uniform, Margin = new Thickness(4, 4, 4, 4), Source = imageSource });
-            stackPanel.Children.Add(new TextBlock { Text = appTitle, HorizontalAlignment = HorizontalAlignment.Left, FontSize = 12, FontFamily = new FontFamily("HarmonyOS Sans SC"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) });
+            stackPanel.Children.Add(new Image { Width = 26, Height = 26, Stretch = Stretch.Uniform, Margin = new Thickness(4, 4, 4, 4), Source = imageSource });
+            stackPanel.Children.Add(new TextBlock { Text = appTitle, HorizontalAlignment = HorizontalAlignment.Left, FontSize = 12, FontFamily = new FontFamily("HarmonyOS Sans SC"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0), Visibility = showButtonTag ? Visibility.Visible : Visibility.Collapsed } );
             var appFrontButton = new Button
             {
                 Background = new SolidColorBrush(Colors.Transparent),
@@ -91,13 +118,92 @@ namespace ExplorerRevolution.UI
                 Height = 40,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 CornerRadius = new CornerRadius(8),
-                Margin = new Thickness(2, 0, 2, 0),
+                Margin = new Thickness(0, 0, 0, 0),
             };
+            var appStatusBar = new Grid
+            {
+                Background = new SolidColorBrush(Colors.Transparent),
+                Height = 3 ,
+                Width = 8,
+                CornerRadius = new CornerRadius(1.5),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                Margin = new Thickness(0, 0, 0, 1),
+                Opacity = 1
+                // Opacity Width Background
+            };
+            appStatusBar.BackgroundTransition = new BrushTransition { Duration = TimeSpan.FromMilliseconds(200) };
+            // 初始化三种可切换的视觉状态（仅初始化，不触发切换）
+            // 状态1: Background = AccentFillColorDefaultBrush, Width = 16, Opacity = 1
+            // 状态2: Background = AccentFillColorDisabledBrush, Width = 8,  Opacity = 1
+            // 状态3: Background = AccentFillColorDisabledBrush, Width = 4,  Opacity = 0
+            // 为了兼容只有 GoToState 可用的环境，将状态组附加到一个 Control（ContentControl）上
+
+            // 创建三个 storyboard（默认不自动开始），并把它们放入 statusHost.Resources 以便后续调用
+            Storyboard MakeStoryboard(object backgroundResourceKey, double width, double opacity)
+            {
+                var storyBoard = new Storyboard { Duration = TimeSpan.FromMilliseconds(200) };
+
+                var widthFrames = new DoubleAnimationUsingKeyFrames();
+                widthFrames.KeyFrames.Add(new SplineDoubleKeyFrame
+                {
+                    KeyTime = KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(200)),
+                    Value = width
+                });
+                var widthAnim = new DoubleAnimation
+                {
+                    To = width,
+                    Duration = TimeSpan.FromMilliseconds(200),
+                };
+                Storyboard.SetTarget(widthFrames, appStatusBar);
+                Storyboard.SetTargetProperty(widthFrames, "Width");
+                storyBoard.Children.Add(widthFrames); //当前无效
+
+                var opacityFrames = new DoubleAnimationUsingKeyFrames();
+                opacityFrames.KeyFrames.Add(new SplineDoubleKeyFrame
+                {
+                    KeyTime = KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(200)),
+                    Value = opacity
+                });
+                Storyboard.SetTarget(opacityFrames, appStatusBar);
+                Storyboard.SetTargetProperty(opacityFrames, "Opacity");
+                storyBoard.Children.Add(opacityFrames);
+
+                var objAnim = new ObjectAnimationUsingKeyFrames();
+                var discrete = new DiscreteObjectKeyFrame
+                {
+                    KeyTime = KeyTime.FromTimeSpan(TimeSpan.Zero),
+                    Value = (Application.Current.Resources.ContainsKey(backgroundResourceKey)
+                        ? Application.Current.Resources[backgroundResourceKey]
+                        : Application.Current.Resources["AccentFillColorDisabledBrush"])
+                };
+                objAnim.KeyFrames.Add(discrete);
+                Storyboard.SetTarget(objAnim, appStatusBar);
+                Storyboard.SetTargetProperty(objAnim, "Background");
+                storyBoard.Children.Add(objAnim);
+
+                return storyBoard;
+            }
+
+            appStatusBar.Resources["AppStatus_Default"] = MakeStoryboard("AccentFillColorDefaultBrush", 16, 1);
+            appStatusBar.Resources["AppStatus_DisabledVisible"] = MakeStoryboard("AccentFillColorDisabledBrush", 8, 1);
+            appStatusBar.Resources["AppStatus_DisabledHidden"] = MakeStoryboard("AccentFillColorDisabledBrush", 4, 0);
+
+
+            appFrontButton.Click += AppFrontButton_Click;
+
             appButtonGrid.Children.Add(appBackButton);
+            appButtonGrid.Children.Add(appStatusBar);
             appButtonGrid.Children.Add(stackPanel);
             appButtonGrid.Children.Add(appFrontButton);
             appButtonGrid.Transitions.Add(new RepositionThemeTransition());
             TaskBarStack.Children.Insert(index, appButtonGrid);
+        }
+
+        private void AppFrontButton_Click(object sender, RoutedEventArgs e)
+        {
+            int index = TaskBarStack.Children.IndexOf(((sender as Button).Parent as Grid));
+            SetHighlightButton(index);
         }
     }
 }

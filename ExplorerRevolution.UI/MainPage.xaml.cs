@@ -6,6 +6,7 @@ using Windows.Gaming.Input.ForceFeedback;
 using Windows.Media.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Media;
 
 namespace ExplorerRevolution
@@ -18,6 +19,10 @@ namespace ExplorerRevolution
         {
             InitializeComponent();
             frame1.Navigate(typeof(TaskBar));
+            (frame1.Content as TaskBar).AddAppButton(0, new Windows.UI.Xaml.Media.Imaging.BitmapImage(new Uri("D:\\A2778\\Pictures\\图标\\WinUI\\AnimationInterop.png")), "结束");
+            (frame1.Content as TaskBar).AddAppButton(0, new Windows.UI.Xaml.Media.Imaging.BitmapImage(new Uri("D:\\A2778\\Pictures\\图标\\WinUI\\AutomationProperties.png")), "结束");
+            (frame1.Content as TaskBar).AddAppButton(0, new Windows.UI.Xaml.Media.Imaging.BitmapImage(new Uri("D:\\A2778\\Pictures\\图标\\WinUI\\AnimationInterop.png")), "结束");
+            (frame1.Content as TaskBar).AddAppButton(0, new Windows.UI.Xaml.Media.Imaging.BitmapImage(new Uri("D:\\A2778\\Pictures\\图标\\WinUI\\AutomationProperties.png")), "结束");
         }
 
         private async void Button_Click(object sender, RoutedEventArgs e)
@@ -36,9 +41,11 @@ namespace ExplorerRevolution
             (frame1.Content as TaskBar).AddAppButton(0, new Windows.UI.Xaml.Media.Imaging.BitmapImage(new Uri("D:\\A2778\\Pictures\\图标\\WinUI\\AutomationProperties.png")), "结束");
         }
 
+        int i = 0;
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            (frame1.Content as TaskBar).SetHighlightButton(1); 
+            (frame1.Content as TaskBar).showButtonTag = !((frame1.Content as TaskBar).showButtonTag);
+            (frame1.Content as TaskBar).RefreshTbPreferences();
         }
     }
 }

@@ -9,15 +9,15 @@
 
   <StackPanel 
     HorizontalAlignment="Stretch"
-    VerticalAlignment="Center"
+    VerticalAlignment="Bottom"
     Orientation="Vertical">
-        <Frame VerticalAlignment="Bottom" Name="frame1" HorizontalAlignment="Stretch">
-            
-        </Frame>
     <TextBlock Style="{StaticResource DisplayTextBlockStyle}" Text="Mile.Xaml ❤ .NET Framework" />
     <TextBlock Text="{x:Bind FrameworkDescription}" />
     <TextBlock>Native Backend</TextBlock>
         <Button Click="Button_Click">Click Me</Button>
-        <Button Click="Button_Click_1">Click Me1</Button>
+        <RepeatButton Click="Button_Click_1">Click Me1</RepeatButton>
+        <Frame VerticalAlignment="Bottom" Name="frame1" HorizontalAlignment="Stretch">
+            
+        </Frame>
     </StackPanel>
 </Page>
