@@ -19,5 +19,13 @@ namespace ExplorerRevolution.Common
                 ref backdrop,
                 4);
         }
+        public static void SetTranspartBackdrop(IntPtr hwnd)
+        {
+            int style = GetWindowLong(hwnd, GWL_STYLE);
+            SetWindowLong(hwnd, GWL_STYLE, style & ~WS_CAPTION & ~WS_THICKFRAME);
+
+            int ex = GetWindowLong(hwnd, GWL_EXSTYLE);
+            SetWindowLong(hwnd, GWL_EXSTYLE, ex | WS_EX_TOOLWINDOW);
+        }
     }
 }

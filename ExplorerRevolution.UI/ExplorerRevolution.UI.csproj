@@ -14,7 +14,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.26100.7175" />
+    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.28000.1839" />
     <PackageReference Include="Mile.Xaml" Version="2.5.1616" />	
     <PackageReference Include="System.Numerics.Vectors" Version="4.6.1" />
   </ItemGroup>
@@ -22,5 +22,5 @@
   <ItemGroup>
     <ProjectReference Include="..\ExplorerRevolution.Common\ExplorerRevolution.Common.csproj" />
   </ItemGroup>
-
+	
 </Project>

@@ -10,14 +10,13 @@ namespace ExplorerRevolution.Common
         public static void HideExplorer()
         {
             OperateTaskbar(SW_HIDE);
-            OperateDesktop(SW_HIDE);
+            HideDesktopIcons();
         }
 
         public static void RestoreExplorer()
         {
             OperateTaskbar(SW_SHOW);
-            OperateDesktop(SW_SHOW);
-            KeyInputHandler.Uninstall();
+            ShowDesktopIcons();
         }
 
         private static IntPtr GetWorkerW()
@@ -67,13 +66,42 @@ namespace ExplorerRevolution.Common
             }
         }
 
-        private static void OperateDesktop(int status)
+        private static IntPtr GetDesktopListViewHandle()
         {
             IntPtr progman = FindWindow("Progman", null);
 
-            if (progman != IntPtr.Zero)
+            IntPtr defView = FindWindowEx(progman, IntPtr.Zero, "SHELLDLL_DefView", null);
+
+            if (defView == IntPtr.Zero)
             {
-                ShowWindow(progman, status);
+                // Windows 10/11 常见结构：WorkerW
+                IntPtr workerW = IntPtr.Zero;
+                do
+                {
+                    workerW = FindWindowEx(IntPtr.Zero, workerW, "WorkerW", null);
+                    defView = FindWindowEx(workerW, IntPtr.Zero, "SHELLDLL_DefView", null);
+                }
+                while (defView == IntPtr.Zero && workerW != IntPtr.Zero);
+            }
+
+            return FindWindowEx(defView, IntPtr.Zero, "SysListView32", "FolderView");
+        }
+
+        public static void HideDesktopIcons()
+        {
+            IntPtr hWnd = GetDesktopListViewHandle();
+            if (hWnd != IntPtr.Zero)
+            {
+                ShowWindow(hWnd, SW_HIDE);
+            }
+        }
+
+        public static void ShowDesktopIcons()
+        {
+            IntPtr hWnd = GetDesktopListViewHandle();
+            if (hWnd != IntPtr.Zero)
+            {
+                ShowWindow(hWnd, SW_SHOW);
             }
         }
     }

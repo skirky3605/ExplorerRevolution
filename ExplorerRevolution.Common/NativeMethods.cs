@@ -7,7 +7,7 @@ using System.Text;
 
 namespace ExplorerRevolution.Common
 {
-    internal static class NativeMethods
+    public static class NativeMethods
     {
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
@@ -139,5 +139,15 @@ namespace ExplorerRevolution.Common
             int attr,
             ref int attrValue,
             int attrSize);
+
+        public const int GWL_STYLE = -16;
+        public const int GWL_EXSTYLE = -20;
+
+        public const int WS_CAPTION = 0x00C00000;
+        public const int WS_THICKFRAME = 0x00040000;
+
+        public const int WS_EX_TOOLWINDOW = 0x00000080;
+        public const int WS_EX_LAYERED = 0x00080000;
+        public const int WS_EX_TRANSPARENT = 0x00000020;
     }
 }
