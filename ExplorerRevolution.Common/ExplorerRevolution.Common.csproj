@@ -1,8 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-	<TargetFramework>net48</TargetFramework>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="PresentationCore" />
-  </ItemGroup>
+	<PropertyGroup>
+	<TargetFramework>net48-windows10.0.26100.0</TargetFramework>
+	</PropertyGroup>
+	<ItemGroup>
+		<Reference Include="PresentationCore" />
+		<PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.19041.1" />
+	</ItemGroup>
 </Project>

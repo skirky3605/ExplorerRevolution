@@ -22,5 +22,10 @@
   <ItemGroup>
     <ProjectReference Include="..\ExplorerRevolution.Common\ExplorerRevolution.Common.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
 	
 </Project>

@@ -190,5 +190,70 @@ namespace ExplorerRevolution.Common
 
         [DllImport("user32.dll")]
         public static extern IntPtr GetShellWindow();
+
+        [DllImport("shell32.dll")]
+        static extern int SHGetPropertyStoreForWindow(
+            IntPtr hwnd, ref Guid iid,
+            [MarshalAs(UnmanagedType.Interface)] out IPropertyStore store);
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct PropVariant
+        {
+            public ushort vt;
+            public ushort wReserved1;
+            public ushort wReserved2;
+            public ushort wReserved3;
+            public IntPtr p;
+            public IntPtr p2;
+
+            public object GetValue()
+            {
+                if (vt == 31 || vt == 30) // VT_LPWSTR or VT_BSTR
+                    return Marshal.PtrToStringUni(p);
+                return null;
+            }
+        }
+
+        [ComImport, Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        interface IPropertyStore
+        {
+            int GetCount(out uint cProps);
+            int GetAt(uint iProp, out PROPERTYKEY pkey);
+            int GetValue(ref PROPERTYKEY key, out PropVariant pv);
+            int SetValue(ref PROPERTYKEY key, ref PropVariant pv);
+            int Commit();
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct PROPERTYKEY
+        {
+            public Guid fmtid;
+            public uint pid;
+        }
+
+        static readonly PROPERTYKEY PKEY_AppUserModel_ID = new PROPERTYKEY
+        {
+            fmtid = new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"),
+            pid = 5
+        };
+
+        [DllImport("user32.dll")]
+        public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+        public static string GetAppUserModelId(IntPtr hWnd)
+        {
+            var iid = typeof(IPropertyStore).GUID;
+            if (SHGetPropertyStoreForWindow(hWnd, ref iid, out var store) != 0)
+                return null;
+
+            var key = new PROPERTYKEY
+            {
+                fmtid = new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"),
+                pid = 5
+            };
+
+            store.GetValue(ref key, out var pv);
+            return pv.GetValue() as string;
+        }
     }
 }

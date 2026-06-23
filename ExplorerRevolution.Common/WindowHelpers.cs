@@ -7,6 +7,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using Windows.Management.Deployment;
+using Windows.ApplicationModel;
 using static ExplorerRevolution.Common.NativeMethods;
 
 namespace ExplorerRevolution.Common
@@ -103,6 +105,34 @@ namespace ExplorerRevolution.Common
             var sb = new StringBuilder(256);
             GetWindowText(hWnd, sb, 256);
             return sb.ToString();
+        }
+
+        public static async Task<Windows.UI.Xaml.Media.Imaging.BitmapImage> GetUwpAppIconAsync(string aumid)
+        {
+            if (string.IsNullOrEmpty(aumid)) return null;
+
+            // AUMID 格式: PackageFamilyName!AppId
+            var parts = aumid.Split('!');
+            if (parts.Length < 2) return null;
+            var familyName = parts[0];
+
+            var pm = new PackageManager();
+            var package = pm.FindPackagesForUser("", familyName).FirstOrDefault();
+            if (package == null) return null;
+
+            // 获取应用入口
+            var apps = await package.GetAppListEntriesAsync();
+            var app = apps.FirstOrDefault();
+            if (app == null) return null;
+
+            // 获取图标
+            //var thumbnail = await app.GetAppInfoAsync();
+            // 直接用包的 Logo
+            var logoUri = package.Logo;
+
+            var bitmapImage = new Windows.UI.Xaml.Media.Imaging.BitmapImage();
+            bitmapImage.UriSource = logoUri;
+            return bitmapImage;
         }
     }
 }
