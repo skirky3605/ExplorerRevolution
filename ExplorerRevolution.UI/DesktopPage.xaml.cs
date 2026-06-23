@@ -23,9 +23,9 @@ namespace ExplorerRevolution.UI
     /// <summary>
     /// 可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class DesktopIcons : Page
+    public sealed partial class DesktopPage : Page
     {
-        public DesktopIcons()
+        public DesktopPage()
         {
             this.InitializeComponent();
         }

@@ -1,5 +1,5 @@
 ﻿<Page
-    x:Class="ExplorerRevolution.UI.DesktopIcons"
+    x:Class="ExplorerRevolution.UI.DesktopPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ExplorerRevolution.UI"
@@ -23,6 +23,14 @@
                 <MenuFlyoutItem Text="属性"/>
             </MenuFlyout>
         </Grid.ContextFlyout>
-        <Button Content="测试"/>
+        <!--<GridView x:Name="DesktopIcons">
+            <GridView.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        
+                    </Grid>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>-->
     </Grid>
 </Page>
