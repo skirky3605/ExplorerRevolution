@@ -27,6 +27,7 @@ using Windows.UI.Xaml.Navigation;
 using static ExplorerRevolution.Common.WindowHelpers;
 using TaskBarIcon = ExplorerRevolution.Data.TaskBarIcon;
 using static ExplorerRevolution.Common.NativeMethods;
+using System.ComponentModel;
 
 namespace ExplorerRevolution.UI
 {
@@ -80,13 +81,18 @@ namespace ExplorerRevolution.UI
             return -1;
         }
 
-        public bool showButtonTag = true;
-        public void RefreshTbPreferences()
+        public bool TbTitleVisibility = true;
+        public async void RefreshTbPreferences()
         {
-            //for (int i = 0; i < TaskBarItemsControl.Children.Count(); i++)
-            //{
-            //    (((TaskBarItemsControl.Children[i] as Grid).Children[2] as StackPanel).Children[1] as TextBlock).Visibility = showButtonTag ? Visibility.Visible : Visibility.Collapsed;
-            //}
+
+            for (int i = 0; i < (taskBarIcons).Count(); i++)
+            {
+                (taskBarIcons)[i].ButtonTitleVisibility = TbTitleVisibility ? Visibility.Collapsed : Visibility.Visible;
+            }
+            TaskBarItemsControl.ItemsSource = null;
+            await Task.Delay(1);
+            TaskBarItemsControl.ItemsSource = taskBarIcons;
+
         }
 
         public void AddAppButton(int index, BitmapImage imageSource, string appTitle)
@@ -97,7 +103,7 @@ namespace ExplorerRevolution.UI
             //    Margin = new Thickness(5, 0, 5, 1),
             //};
             //stackPanel.Children.Add(new Image { Width = 26, Height = 26, Stretch = Stretch.Uniform, Margin = new Thickness(4, 4, 4, 4), Source = imageSource });
-            //stackPanel.Children.Add(new TextBlock { Text = appTitle, HorizontalAlignment = HorizontalAlignment.Left, FontSize = 12, FontFamily = new FontFamily("HarmonyOS Sans SC"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0), Visibility = showButtonTag ? Visibility.Visible : Visibility.Collapsed } );
+            //stackPanel.Children.Add(new TextBlock { Text = appTitle, HorizontalAlignment = HorizontalAlignment.Left, FontSize = 12, FontFamily = new FontFamily("HarmonyOS Sans SC"), VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0), Visibility = TbTitleVisibility ? Visibility.Visible : Visibility.Collapsed } );
             //var appFrontButton = new Button
             //{
             //    Background = new SolidColorBrush(Colors.Transparent),
@@ -231,17 +237,18 @@ namespace ExplorerRevolution.UI
 
         private void Button_TbRbBkgAppArea_Front_Click(object sender, RoutedEventArgs e)
         {
-
+            TbTitleVisibility = !TbTitleVisibility;
+            RefreshTbPreferences();
         }
 
         private void Button_TbRbKeyBoardArea_Front_Click(object sender, RoutedEventArgs e)
         {
 
         }
+        ObservableCollection<TaskBarIcon> taskBarIcons = new();
 
         private void TaskBarItemsControl_Loaded(object sender, RoutedEventArgs e)
         {
-            ObservableCollection<TaskBarIcon> taskBarIcons = new();
             var listWindowPtr = Common.WindowHelpers.GetTaskbarWindows();
             foreach (var WindowPtr in listWindowPtr)
             {
@@ -250,7 +257,8 @@ namespace ExplorerRevolution.UI
                     {
                         Title = Common.WindowHelpers.GetWindowTitle(WindowPtr),
                         Icon = await GetWindowIconAsync(WindowPtr),
-                        IsActive = Visibility.Visible
+                        IsActive = Visibility.Visible,
+                        ButtonTitleVisibility = TbTitleVisibility ? Visibility.Collapsed : Visibility.Visible
                     };
                     taskBarIcons.Add(taskBarIcon);
                 });
@@ -300,6 +308,13 @@ namespace ExplorerRevolution.UI
             {
                 return null;
             }
+        }
+
+        private void TaskBarItemsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            (sender as GridView).SelectedIndex = (sender as GridView).SelectedIndex;
+            //(sender as GridView).SelectedIndex = -1;
+            SetHighlightButton((sender as GridView).SelectedIndex);
         }
     }
 }

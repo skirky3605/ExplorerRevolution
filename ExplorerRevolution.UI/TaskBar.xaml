@@ -7,7 +7,8 @@
     xmlns:local="using:ExplorerRevolution.UI"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Background="Transparent"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    x:Name="TaskBarPage">
 
     <Grid>
         <Grid
@@ -25,7 +26,7 @@
                 BorderThickness="2"
                 CornerRadius="0"
                 IsEnabled="False" />
-            <StackPanel
+            <StackPanel Visibility="Collapsed"
                 Name="TaskBarStack"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Bottom"
@@ -36,49 +37,50 @@
                     </TransitionCollection>
                 </StackPanel.Transitions>
             </StackPanel>
-            <ItemsControl
+            <GridView Margin="48,1,256,0"
+                SelectionMode="Extended" AllowDrop="True" CanReorderItems="True"
                 Name="TaskBarItemsControl"
                 HorizontalAlignment="Center"
-                VerticalAlignment="Bottom"
-                Loaded="TaskBarItemsControl_Loaded">
-                <ItemsControl.Transitions>
+                VerticalAlignment="Top" Height="48"
+                Loaded="TaskBarItemsControl_Loaded" ShowsScrollingPlaceholders="False" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Hidden" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.VerticalScrollMode="Disabled" SelectionChanged="TaskBarItemsControl_SelectionChanged" ScrollViewer.VerticalScrollBarVisibility="Hidden" >
+                <GridView.ItemContainerTransitions>
                     <TransitionCollection>
-                        <RepositionThemeTransition />
+                        <RepositionThemeTransition IsStaggeringEnabled="True" />
                     </TransitionCollection>
-                </ItemsControl.Transitions>
-                <ItemsControl.ItemsPanel>
+                </GridView.ItemContainerTransitions>
+                <GridView.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="4" />
+                        <StackPanel Orientation="Horizontal" Spacing="0" />
                     </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
+                </GridView.ItemsPanel>
+                <GridView.ItemTemplate>
                     <DataTemplate x:DataType="data:TaskBarIcon">
-                        <Button
-                            Width="44"
-                            Height="44"
+                        <Grid MaxWidth="128"
+                            Height="46"
                             Padding="0"
                             Background="Transparent"
                             BorderBrush="Transparent"
                             CornerRadius="8"
-                            ToolTipService.ToolTip="{x:Bind Title}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="2">
-                                <Image
-                                    Width="20"
-                                    Height="20"
-                                    Source="{x:Bind Icon}" />
-                                <Rectangle
-                                    Width="4"
-                                    Height="4"
-                                    Fill="{ThemeResource SystemAccentColor}"
-                                    RadiusX="2"
-                                    RadiusY="2"
-                                    Visibility="{x:Bind IsActive}" />
+                            Margin="6,0,6,1">
+                            <StackPanel Orientation="Horizontal">
+                                <Image Margin="1,0,1,1"
+                                Width="24"
+                                Height="24"
+                                Source="{x:Bind Icon}" />
+                                <TextBlock Text="{x:Bind Title}"  VerticalAlignment="Center" Margin="4,0,0,2"  Visibility="{x:Bind ButtonTitleVisibility}"/>
                             </StackPanel>
-                        </Button>
+                            <Grid
+                                Width="8"
+                                Height="3"
+                                Background="{ThemeResource AccentFillColorDefaultBrush}" CornerRadius="1.5"
+                                Visibility="{x:Bind IsActive}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,1" >
+
+                            </Grid>
+                        </Grid>
                     </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-            <Grid Name="TbLeftBottomArea">
+                </GridView.ItemTemplate>
+            </GridView>
+            <Grid Name="TbLeftBottomArea" HorizontalAlignment="Left">
                 <StackPanel
                     Name="TbRbLeftBottomAreaStk"
                     Margin="4,0,4,0"
@@ -90,7 +92,7 @@
                 Name="TaskBarRightBottomStack"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
-                Orientation="Horizontal">
+                Orientation="Horizontal" Height="48">
 
                 <Grid Name="TbRbBkgAppArea" Width="36">
                     <Grid.Transitions>
@@ -128,7 +130,6 @@
                         BorderBrush="Transparent"
                         Click="Button_TbRbBkgAppArea_Front_Click"
                         CornerRadius="8"
-                        FontFamily="HarmonyOS Sans SC"
                         Opacity="0.4" />
                 </Grid>
                 <Grid Name="TbRbKeyBoardArea">
@@ -164,7 +165,6 @@
                         BorderBrush="Transparent"
                         Click="Button_TbRbStatusArea_Front_Click"
                         CornerRadius="8"
-                        FontFamily="HarmonyOS Sans SC"
                         Opacity="0.4" />
                 </Grid>
                 <Grid Name="TbRbTimeArea" Width="76">
@@ -182,7 +182,6 @@
                         Margin="0,0,11,25"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Bottom"
-                        FontFamily="HarmonyOS Sans SC"
                         FontSize="12"
                         Text="00:00" />
                     <TextBlock
@@ -190,7 +189,6 @@
                         Margin="0,0,11,9"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Bottom"
-                        FontFamily="HarmonyOS Sans SC"
                         FontSize="12"
                         Text="2026/1/1" />
                     <Button

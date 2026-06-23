@@ -14,5 +14,6 @@ namespace ExplorerRevolution.Data
         public BitmapSource Icon;
         //public int status;
         public Visibility IsActive;
+        public Visibility ButtonTitleVisibility;
     }
 }
