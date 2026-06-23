@@ -11,7 +11,7 @@
     HorizontalAlignment="Stretch"
     VerticalAlignment="Center"
     Orientation="Vertical">
-        <Frame Name="frame1" HorizontalAlignment="Stretch">
+        <Frame VerticalAlignment="Bottom" Name="frame1" HorizontalAlignment="Stretch">
             
         </Frame>
     <TextBlock Style="{StaticResource DisplayTextBlockStyle}" Text="Mile.Xaml ❤ .NET Framework" />

@@ -16,7 +16,22 @@ namespace ExplorerRevolution
             App app = new();
 
             MainForm = new MainForm();
+
+            #region 替代explorer
+            MainForm.FormBorderStyle = FormBorderStyle.None;
+            MainForm.WindowState = FormWindowState.Normal;
+            MainForm.Bounds = Screen.PrimaryScreen.Bounds;
+            MainForm.TopMost = false;
+            Common.HookExplorer.HideExplorer();
+            Common.HookExplorer.AttachToWorkerW(MainForm.Handle);
+            Common.KeyInputHandler.Install();
+            #endregion
+
             Application.Run(MainForm);
+            AppDomain.CurrentDomain.ProcessExit += (s, e) =>
+            {
+                Common.HookExplorer.RestoreExplorer();
+            };
 
             app.Close();
         }
