@@ -2,32 +2,32 @@
     x:Class="ExplorerRevolution.UI.DesktopPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:ExplorerRevolution.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:ExplorerRevolution.UI"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="Transparent">
+    Background="Transparent"
+    mc:Ignorable="d">
 
     <Grid
         x:Name="Desktop"
-        VerticalAlignment="Stretch"
         HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
         Background="Transparent"
-        RightTapped="Desktop_RightTapped"
-        IsRightTapEnabled="True">
+        IsRightTapEnabled="True"
+        RightTapped="Desktop_RightTapped">
         <Grid.ContextFlyout>
             <MenuFlyout>
-                <MenuFlyoutItem Text="打开"/>
-                <MenuFlyoutItem Text="删除"/>
-                <MenuFlyoutSeparator/>
-                <MenuFlyoutItem Text="属性"/>
+                <MenuFlyoutItem Text="打开" />
+                <MenuFlyoutItem Text="删除" />
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="属性" />
             </MenuFlyout>
         </Grid.ContextFlyout>
         <!--<GridView x:Name="DesktopIcons">
             <GridView.ItemTemplate>
                 <DataTemplate>
                     <Grid>
-                        
+
                     </Grid>
                 </DataTemplate>
             </GridView.ItemTemplate>
