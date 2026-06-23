@@ -15,5 +15,6 @@ namespace ExplorerRevolution.Data
         //public int status;
         public Visibility IsActive;
         public Visibility ButtonTitleVisibility;
+        public bool IsForeground; 
     }
 }

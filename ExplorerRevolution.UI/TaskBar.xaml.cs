@@ -257,7 +257,8 @@ namespace ExplorerRevolution.UI
                     {
                         Title = Common.WindowHelpers.GetWindowTitle(WindowPtr),
                         Icon = await GetWindowIconAsync(WindowPtr),
-                        IsActive = Visibility.Visible,
+                        IsActive = Visibility.Visible, //
+                        IsForeground = TbTitleVisibility, //
                         ButtonTitleVisibility = TbTitleVisibility ? Visibility.Collapsed : Visibility.Visible
                     };
                     taskBarIcons.Add(taskBarIcon);
@@ -312,6 +313,7 @@ namespace ExplorerRevolution.UI
 
         private void TaskBarItemsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            //不要用changed，用clicked
             (sender as GridView).SelectedIndex = (sender as GridView).SelectedIndex;
             //(sender as GridView).SelectedIndex = -1;
             SetHighlightButton((sender as GridView).SelectedIndex);

@@ -37,7 +37,9 @@
                     </TransitionCollection>
                 </StackPanel.Transitions>
             </StackPanel>
-            <GridView Margin="48,1,256,0"
+            
+            <!-- > 这是任务栏图标 </!-->
+            <GridView Margin="256,1,256,1"
                 SelectionMode="Extended" AllowDrop="True" CanReorderItems="True"
                 Name="TaskBarItemsControl"
                 HorizontalAlignment="Center"
@@ -60,22 +62,26 @@
                             Padding="0"
                             Background="Transparent"
                             BorderBrush="Transparent"
-                            CornerRadius="8"
+                            CornerRadius="0"
                             Margin="6,0,6,1">
-                            <StackPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
                                 <Image Margin="1,0,1,1"
                                 Width="24"
                                 Height="24"
                                 Source="{x:Bind Icon}" />
                                 <TextBlock Text="{x:Bind Title}"  VerticalAlignment="Center" Margin="4,0,0,2"  Visibility="{x:Bind ButtonTitleVisibility}"/>
                             </StackPanel>
-                            <Grid
-                                Width="8"
-                                Height="3"
-                                Background="{ThemeResource AccentFillColorDefaultBrush}" CornerRadius="1.5"
-                                Visibility="{x:Bind IsActive}" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,1" >
+                            <ToggleButton
+                                Width="24"
+                                Height="12"
+                                Background="{ThemeResource AccentFillColorDisabledBrush}" CornerRadius="8"
+                                IsChecked="{x:Bind IsForeground}" Visibility="{x:Bind IsActive}" HorizontalAlignment="Center" VerticalAlignment="Bottom"  Margin="0,0,0,2" IsTabStop="False" >
 
-                            </Grid>
+                                    <ToggleButton.RenderTransform>
+                                        <ScaleTransform CenterX="12" CenterY="12" ScaleX="0.3333" ScaleY="0.25"/>
+                                    </ToggleButton.RenderTransform>
+                                </ToggleButton>
+                                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent"/>
                         </Grid>
                     </DataTemplate>
                 </GridView.ItemTemplate>
