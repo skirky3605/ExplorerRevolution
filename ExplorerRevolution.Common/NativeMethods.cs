@@ -149,5 +149,21 @@ namespace ExplorerRevolution.Common
         public const int WS_EX_TOOLWINDOW = 0x00000080;
         public const int WS_EX_LAYERED = 0x00080000;
         public const int WS_EX_TRANSPARENT = 0x00000020;
+
+        [DllImport("user32.dll")]
+        public static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        public static extern int GetWindowText(
+            IntPtr hWnd,
+            StringBuilder lpString,
+            int nMaxCount);
+
+        [DllImport("user32.dll")]
+        public static extern int GetWindowTextLength(
+            IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetShellWindow();
     }
 }

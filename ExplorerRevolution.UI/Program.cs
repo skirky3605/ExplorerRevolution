@@ -1,7 +1,12 @@
-﻿using System;
+﻿using ExplorerRevolution.Common;
+using ExplorerRevolution.UI;
+using Mile.Xaml;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
+using Windows.UI.Xaml;
 using static ExplorerRevolution.Common.NativeMethods;
+using Application = System.Windows.Forms.Application;
 
 namespace ExplorerRevolution
 {
@@ -17,6 +22,24 @@ namespace ExplorerRevolution
 
             App app = new();
 
+            var DesktopForm = new Form();
+            DesktopForm.FormBorderStyle = FormBorderStyle.None;
+            DesktopForm.WindowState = FormWindowState.Normal;
+            DesktopForm.Bounds = Screen.PrimaryScreen.Bounds;
+
+            DesktopForm.AllowTransparency = true;
+            DesktopForm.BackColor = Color.LimeGreen;
+            DesktopForm.TransparencyKey = Color.LimeGreen;
+            DesktopForm.TopMost = false;
+            Common.HookExplorer.HideExplorer();
+            Common.HookExplorer.AttachToWorkerW(DesktopForm.Handle);
+            WindowsXamlHost DesktopXamlHost = new WindowsXamlHost();
+            DesktopForm.Controls.Add(DesktopXamlHost);
+            DesktopXamlHost.AutoSize = true;
+            DesktopXamlHost.Dock = DockStyle.Fill;
+            DesktopXamlHost.Child = new DesktopPage();
+            Application.Run(DesktopForm);
+
             MainForm = new MainForm();
             #region 替代explorer
             MainForm.FormBorderStyle = FormBorderStyle.None;
@@ -26,14 +49,6 @@ namespace ExplorerRevolution
             MainForm.AllowTransparency = true;
             MainForm.BackColor = Color.LimeGreen;
             MainForm.TransparencyKey = Color.LimeGreen;
-            //const int GWL_EXSTYLE = -20;
-            //const int WS_EX_LAYERED = 0x80000;
-            //const int WS_EX_TRANSPARENT = 0x20;
-            //// 确保不带 WS_EX_TRANSPARENT，窗口可以接收点击
-            //int style = GetWindowLong(MainForm.Handle, GWL_EXSTYLE);
-            //style |= WS_EX_LAYERED;
-            //style &= ~WS_EX_TRANSPARENT;         // 移除穿透标志
-            //SetWindowLong(MainForm.Handle, GWL_EXSTYLE, style);
             MainForm.TopMost = false;
             Common.HookExplorer.HideExplorer();
             Common.HookExplorer.AttachToWorkerW(MainForm.Handle);
@@ -42,8 +57,11 @@ namespace ExplorerRevolution
             Application.Run(MainForm);
             AppDomain.CurrentDomain.ProcessExit += (s, e) =>
             {
-                Common.HookExplorer.RestoreExplorer();
+                HookExplorer.RestoreExplorer();
             };
+
+            // Only for test
+            WindowHelpers.GetTaskBarIcons();
 
             app.Close();
         }
