@@ -1,8 +1,7 @@
-﻿using MileXamlBlankAppNetFramework;
-using System;
+﻿using System;
 using System.Windows.Forms;
 
-namespace MileXamlBlankAppNetFrameworkModern
+namespace ExplorerRevolution
 {
     public static class Program
     {
@@ -20,6 +19,11 @@ namespace MileXamlBlankAppNetFrameworkModern
             Application.Run(MainForm);
 
             app.Close();
+        }
+
+        public static void Run()
+        {
+            Main();
         }
     }
 }

@@ -8,7 +8,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 
-namespace MileXamlBlankAppNetFrameworkModern
+namespace ExplorerRevolution
 {
     public sealed partial class MainPage : Page
     {

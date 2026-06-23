@@ -1,4 +1,4 @@
-﻿namespace MileXamlBlankAppNetFramework
+﻿namespace ExplorerRevolution
 {
     partial class MainForm
     {
@@ -35,8 +35,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1600, 900);
-            this.Name = "Form1";
-            this.Text = "MileXamlBlankApp (.Net Framework)";
+            this.Name = "MainForm";
+            this.Text = "ExplorerRevolution";
             this.ResumeLayout(false);
 
         }

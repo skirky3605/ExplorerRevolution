@@ -1,4 +1,4 @@
 <Solution>
+  <Project Path="ExplorerRevolution.Common/ExplorerRevolution.Common.csproj" Id="0de0755b-368d-4a80-892d-481c4a544a38" />
   <Project Path="ExplorerRevolution.UI/ExplorerRevolution.UI.csproj" />
-  <Project Path="ExplorerRevolution/ExplorerRevolution.csproj" Id="7b3f9903-1321-4fdd-aee9-7b4ac49cf3dd" />
 </Solution>
