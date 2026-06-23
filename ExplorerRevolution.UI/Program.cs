@@ -2,6 +2,7 @@
 using ExplorerRevolution.UI;
 using Mile.Xaml;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -20,15 +21,20 @@ namespace ExplorerRevolution
             Application.SetCompatibleTextRenderingDefault(false);
 
             App app = new();
-
-            Application.Run(new ShellContext());
             AppDomain.CurrentDomain.ProcessExit += (s, e) =>
             {
                 HookExplorer.RestoreExplorer();
             };
-
             // Only for test
-            WindowHelpers.GetTaskBarIcons();
+            var listWindow = WindowHelpers.GetTaskbarWindows();
+            foreach (var ptr in listWindow)
+            {
+                Debug.WriteLine(ptr);
+                Debug.WriteLine(WindowHelpers.GetWindowTitle(ptr));
+                WindowHelpers.GetWindowIcon(ptr);
+            }
+
+            Application.Run(new ShellContext());
 
             app.Close();
         }

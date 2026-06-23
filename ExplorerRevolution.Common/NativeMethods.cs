@@ -27,6 +27,12 @@ namespace ExplorerRevolution.Common
         public const int SW_SHOW = 5;
 
         [DllImport("user32.dll")]
+        public static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetClassLongPtr(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll")]
         public static extern bool SetWindowPos(
             IntPtr hWnd,
             IntPtr hWndInsertAfter,
@@ -51,10 +57,27 @@ namespace ExplorerRevolution.Common
         }
 
         [DllImport("user32.dll")]
-        public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr SendMessageTimeout(
+            IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam,
+            uint fuFlags, uint uTimeout, out IntPtr lpdwResult);
+
+        public const uint SMTO_ABORTIFHUNG = 0x0002;
+        public const uint SMTO_NOTIMEOUTIFNOTHUNG = 0x0008;
 
         [DllImport("user32.dll")]
-        public static extern bool PostMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+        public static extern bool IsIconic(IntPtr hWnd); // 是否最小化
+
+        [DllImport("dwmapi.dll")]
+        public static extern int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute,
+            out bool pvAttribute, int cbAttribute);
+
+        public const int DWMWA_CLOAKED = 14;
+
+        [DllImport("user32.dll")]
+        public static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll")]
         public static extern IntPtr SetWinEventHook(
@@ -145,10 +168,12 @@ namespace ExplorerRevolution.Common
 
         public const int WS_CAPTION = 0x00C00000;
         public const int WS_THICKFRAME = 0x00040000;
-
+        public const uint WM_GETICON = 0x007F;
         public const int WS_EX_TOOLWINDOW = 0x00000080;
         public const int WS_EX_LAYERED = 0x00080000;
         public const int WS_EX_TRANSPARENT = 0x00000020;
+        public const uint WS_EX_APPWINDOW = 0x00040000;
+        public const uint GW_OWNER = 4;
 
         [DllImport("user32.dll")]
         public static extern bool IsWindowVisible(IntPtr hWnd);

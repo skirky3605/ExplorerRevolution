@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
@@ -26,44 +28,81 @@ namespace ExplorerRevolution.Common
             public static int ProcessValue;
         }
 
-        public static List<(IntPtr Hwnd, string Title)> GetTaskbarWindows()
+        private static bool ShouldShowInTaskbar(IntPtr hWnd)
         {
-            var result = new List<(IntPtr, string)>();
+            if (!IsWindowVisible(hWnd)) return false;
 
-            IntPtr shellWindow = GetShellWindow();
+            // Cloaked 窗口不显示（UWP 后台窗口、虚拟桌面不在当前桌面的窗口）
+            if (IsCloaked(hWnd)) return false;
 
-            EnumWindows((hWnd, lParam) =>
+            int exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+            bool isToolWindow = (exStyle & WS_EX_TOOLWINDOW) != 0;
+            bool isAppWindow = (exStyle & WS_EX_APPWINDOW) != 0;
+
+            if (isToolWindow && !isAppWindow) return false;
+
+            IntPtr owner = GetWindow(hWnd, GW_OWNER);
+            if (owner != IntPtr.Zero && !isAppWindow) return false;
+
+            // 没有标题且没有 WS_EX_APPWINDOW 的窗口通常不显示
+            var sb = new StringBuilder(256);
+            GetWindowText(hWnd, sb, 256);
+            if (sb.Length == 0 && !isAppWindow) return false;
+
+            return true;
+        }
+
+        private static bool IsCloaked(IntPtr hWnd)
+        {
+            DwmGetWindowAttribute(hWnd, DWMWA_CLOAKED, out bool cloaked, Marshal.SizeOf<bool>());
+            return cloaked;
+        }
+
+        public static List<IntPtr> GetTaskbarWindows()
+        {
+            var result = new List<IntPtr>();
+            EnumWindows((hWnd, _) =>
             {
-                if (hWnd == shellWindow)
-                    return true;
-
-                if (!IsWindowVisible(hWnd))
-                    return true;
-
-                int length = GetWindowTextLength(hWnd);
-                if (length == 0)
-                    return true;
-
-                var sb = new StringBuilder(length + 1);
-                GetWindowText(hWnd, sb, sb.Capacity);
-
-                result.Add((hWnd, sb.ToString()));
-
+                if (ShouldShowInTaskbar(hWnd))
+                    result.Add(hWnd);
                 return true;
             }, IntPtr.Zero);
-
             return result;
         }
 
-        public static List<TaskBarIcon> GetTaskBarIcons()
+        public static IntPtr GetWindowIcon(IntPtr hWnd)
         {
-            var windows = GetTaskbarWindows();
-            foreach (var item in windows)
-            {
-                Debug.WriteLine(item.Hwnd);
-                Debug.WriteLine(item.Title);
-            }
-            return null;
+            const uint WM_GETICON = 0x007F;
+            const int ICON_BIG = 1;
+            const int ICON_SMALL2 = 2;   // 窗口类小图标
+            const int GCL_HICON = -14;
+            const int GCL_HICONSM = -34;
+
+            IntPtr hIcon = IntPtr.Zero;
+
+            // 1. 小图标
+            SendMessageTimeout(hWnd, WM_GETICON, (IntPtr)ICON_SMALL2, IntPtr.Zero,
+                SMTO_ABORTIFHUNG | SMTO_NOTIMEOUTIFNOTHUNG, 100, out hIcon);
+            if (hIcon != IntPtr.Zero) return hIcon;
+
+            // 2. 大图标
+            SendMessageTimeout(hWnd, WM_GETICON, (IntPtr)ICON_BIG, IntPtr.Zero,
+                SMTO_ABORTIFHUNG | SMTO_NOTIMEOUTIFNOTHUNG, 100, out hIcon);
+            if (hIcon != IntPtr.Zero) return hIcon;
+
+            // 3. 从窗口类获取
+            hIcon = GetClassLongPtr(hWnd, GCL_HICONSM);
+            if (hIcon != IntPtr.Zero) return hIcon;
+
+            hIcon = GetClassLongPtr(hWnd, GCL_HICON);
+            return hIcon;
+        }
+
+        public static string GetWindowTitle(IntPtr hWnd)
+        {
+            var sb = new StringBuilder(256);
+            GetWindowText(hWnd, sb, 256);
+            return sb.ToString();
         }
     }
 }
