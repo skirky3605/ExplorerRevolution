@@ -81,18 +81,18 @@ namespace ExplorerRevolution.UI
             return -1;
         }
 
-        public bool TbTitleVisibility = true;
+        public bool TbTitleVisibility = false;
         public async void RefreshTbPreferences()
         {
 
             for (int i = 0; i < (taskBarIcons).Count(); i++)
             {
-                (taskBarIcons)[i].ButtonTitleVisibility = TbTitleVisibility ? Visibility.Collapsed : Visibility.Visible;
+                (taskBarIcons)[i].ButtonTitleVisibility = TbTitleVisibility ? Visibility.Visible : Visibility.Collapsed;
+                (taskBarIcons)[i].IsForeground = TbTitleVisibility;
             }
-            TaskBarItemsControl.ItemsSource = null;
-            await Task.Delay(1);
-            TaskBarItemsControl.ItemsSource = taskBarIcons;
 
+            //Bindings.Update();
+            taskBarIcons.Move(0, 0);
         }
 
         public void AddAppButton(int index, BitmapImage imageSource, string appTitle)
@@ -230,7 +230,7 @@ namespace ExplorerRevolution.UI
 
         }
 
-        private void Button_TbRbShowDskArea_Front_Click(object sender, RoutedEventArgs e)
+        private async void Button_TbRbShowDskArea_Front_Click(object sender, RoutedEventArgs e)
         {
 
         }
@@ -264,7 +264,7 @@ namespace ExplorerRevolution.UI
                     taskBarIcons.Add(taskBarIcon);
                 });
             }
-            TaskBarItemsControl.ItemsSource = taskBarIcons; ;
+            //TaskBarItemsControl.ItemsSource = taskBarIcons;
         }
 
         public static async Task<BitmapImage> GetWindowIconAsync(IntPtr hWnd)

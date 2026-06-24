@@ -43,8 +43,8 @@
                 SelectionMode="Extended" AllowDrop="True" CanReorderItems="True"
                 Name="TaskBarItemsControl"
                 HorizontalAlignment="Center"
-                VerticalAlignment="Top" Height="48"
-                Loaded="TaskBarItemsControl_Loaded" ShowsScrollingPlaceholders="False" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Hidden" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.VerticalScrollMode="Disabled" SelectionChanged="TaskBarItemsControl_SelectionChanged" ScrollViewer.VerticalScrollBarVisibility="Hidden" >
+                VerticalAlignment="Top" Height="64"
+                Loaded="TaskBarItemsControl_Loaded" ItemsSource="{x:Bind taskBarIcons,Mode=TwoWay}" ScrollViewer.BringIntoViewOnFocusChange="False" ShowsScrollingPlaceholders="False" ScrollViewer.HorizontalScrollMode="Disabled" ScrollViewer.HorizontalScrollBarVisibility="Hidden" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.VerticalScrollMode="Disabled" SelectionChanged="TaskBarItemsControl_SelectionChanged" ScrollViewer.VerticalScrollBarVisibility="Hidden" >
                 <GridView.ItemContainerTransitions>
                     <TransitionCollection>
                         <RepositionThemeTransition IsStaggeringEnabled="True" />
@@ -52,7 +52,7 @@
                 </GridView.ItemContainerTransitions>
                 <GridView.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="0" />
+                        <StackPanel Orientation="Horizontal" Spacing="0" Height="50" Margin="0,0,0,4" />
                     </ItemsPanelTemplate>
                 </GridView.ItemsPanel>
                 <GridView.ItemTemplate>
