@@ -30,5 +30,13 @@ namespace ExplorerRevolution.Common
             int ex = GetWindowLong(hwnd, GWL_EXSTYLE);
             SetWindowLong(hwnd, GWL_EXSTYLE, ex | WS_EX_TOOLWINDOW);
         }
+
+        public static void HideFromAltTab(IntPtr hWnd)
+        {
+            int exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+            exStyle |= WS_EX_TOOLWINDOW;
+            exStyle &= ~(int)WS_EX_APPWINDOW;
+            SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
+        }
     }
 }
