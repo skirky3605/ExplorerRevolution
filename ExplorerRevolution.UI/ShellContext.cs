@@ -1,4 +1,5 @@
-﻿using Mile.Xaml;
+﻿using ExplorerRevolution.Common;
+using Mile.Xaml;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -43,8 +44,9 @@ namespace ExplorerRevolution.UI
             DesktopForm.BackColor = Color.LimeGreen;
             DesktopForm.TransparencyKey = Color.LimeGreen;
             DesktopForm.ShowInTaskbar = false;
+            Helpers.HideFromAltTab(DesktopForm.Handle);
 
-            Common.HookExplorer.AttachToWorkerW(DesktopForm.Handle);
+            HookExplorer.AttachToWorkerW(DesktopForm.Handle);
 
             WindowsXamlHost DesktopXamlHost = new WindowsXamlHost();
             DesktopForm.Controls.Add(DesktopXamlHost);
@@ -63,6 +65,7 @@ namespace ExplorerRevolution.UI
             TaskBarForm.TransparencyKey = Color.LimeGreen;
             TaskBarForm.TopMost = true;
             TaskBarForm.ShowInTaskbar = false;
+            Helpers.HideFromAltTab(TaskBarForm.Handle);
 
             TaskBarForm.Show();
 
