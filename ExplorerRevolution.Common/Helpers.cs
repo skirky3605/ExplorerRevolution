@@ -35,7 +35,7 @@ namespace ExplorerRevolution.Common
         {
             int exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
             exStyle |= WS_EX_TOOLWINDOW;
-            exStyle &= ~WS_EX_APPWINDOW;
+            exStyle &= ~(int)WS_EX_APPWINDOW;
             SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
         }
     }
