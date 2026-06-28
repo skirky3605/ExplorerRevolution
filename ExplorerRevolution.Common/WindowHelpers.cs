@@ -30,7 +30,7 @@ namespace ExplorerRevolution.Common
             public static int ProcessValue;
         }
 
-        private static bool ShouldShowInTaskbar(IntPtr hWnd)
+        public static bool ShouldShowInTaskbar(IntPtr hWnd)
         {
             if (!IsWindowVisible(hWnd)) return false;
 
