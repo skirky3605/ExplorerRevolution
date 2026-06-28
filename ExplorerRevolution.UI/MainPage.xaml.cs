@@ -44,7 +44,7 @@ namespace ExplorerRevolution
         int i = 0;
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            (frame1.Content as TaskBar).showButtonTag = !((frame1.Content as TaskBar).showButtonTag);
+            //(frame1.Content as TaskBar).showButtonTag = !((frame1.Content as TaskBar).showButtonTag);
             (frame1.Content as TaskBar).RefreshTbPreferences();
         }
     }
