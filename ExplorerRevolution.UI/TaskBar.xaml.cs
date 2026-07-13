@@ -269,43 +269,11 @@ namespace ExplorerRevolution.UI
             {
                 if (!taskBarIcons.Select(icon => icon.IntPtr).Contains(intPtr)){
                     _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => {
-                        // 优先尝试通过 IApplicationView 获取 UWP 图标信息
-                        Windows.UI.Xaml.Media.Imaging.BitmapImage iconImage = null;
-                        IntPtr pView = IntPtr.Zero;
-                        try
-                        {
-                            pView = ExplorerRevolution.Common.ApplicationViewInterop.GetApplicationViewForHwnd(intPtr);
-                            if (pView != IntPtr.Zero)
-                            {
-                                // 如果关联 IApplicationView 存在，则尝试通过 AUMID 获取 UWP 图标
-                                try
-                                {
-                                    var aumid = GetAppUserModelId(intPtr);
-                                    if (!string.IsNullOrEmpty(aumid))
-                                    {
-                                        iconImage = await ExplorerRevolution.Common.WindowHelpers.GetUwpAppIconAsync(aumid);
-                                    }
-                                }
-                                catch { }
-                            }
-                        }
-                        catch { }
-                        finally
-                        {
-                            try { if (pView != IntPtr.Zero) System.Runtime.InteropServices.Marshal.Release(pView); } catch { }
-                        }
-
-                        // 回退到传统方式获取图标
-                        if (iconImage == null)
-                        {
-                            iconImage = await GetWindowIconAsync(intPtr);
-                        }
-
                         var taskBarIcon = new TaskBarIcon()
                         {
                             IntPtr = intPtr,
                             Title = GetWindowTitle(intPtr),
-                            Icon = iconImage,
+                            Icon = await GetWindowIconAsync(intPtr),
                             IsActive = Visibility.Visible, //存在此窗口
                             IsForeground = TbTitleVisibility, //此窗口在前台
                             ButtonTitleVisibility = TbTitleVisibility ? Visibility.Visible : Visibility.Collapsed
