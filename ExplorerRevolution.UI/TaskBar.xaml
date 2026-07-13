@@ -14,7 +14,7 @@
         <Grid
             Name="TaskBarGrid"
             Height="48"
-            Background="{ThemeResource SystemControlAcrylicElementMediumHighBrush}"
+            Background="{ThemeResource SystemControlAltHighAcrylicElementBrush}"
             CornerRadius="1"
             Loaded="TaskBarGrid_Loaded">
             <Button

@@ -133,8 +133,8 @@ namespace ExplorerRevolution.Common
             {
                 var process = Process.GetProcessById((int)pid);
 
-                return process.ProcessName ==
-                       "ApplicationFrameHost";
+                return process.ProcessName == "ApplicationFrameHost" &&
+                       !string.IsNullOrEmpty(GetAppUserModelId(hwnd));
             }
             catch
             {
