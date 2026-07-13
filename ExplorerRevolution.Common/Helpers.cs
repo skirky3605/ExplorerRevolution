@@ -100,6 +100,7 @@ namespace ExplorerRevolution.Common
 
             return false;
         }*/
+
         public static bool IsUwpWindow(IntPtr hwnd)
         {
             GetWindowThreadProcessId(hwnd, out uint pid);
@@ -108,8 +109,8 @@ namespace ExplorerRevolution.Common
             {
                 var process = Process.GetProcessById((int)pid);
 
-                return process.ProcessName ==
-                       "ApplicationFrameHost";
+                return process.ProcessName =="ApplicationFrameHost" &&
+                       !string.IsNullOrEmpty(GetAppUserModelId(hwnd));
             }
             catch
             {
