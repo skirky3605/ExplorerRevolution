@@ -52,15 +52,38 @@ namespace ExplorerRevolution.Common
 
             switch (eventType)
             {
+                case EVENT_OBJECT_CREATE:
                 case EVENT_OBJECT_SHOW:
-                    // 窗口变为可见或从最小化恢复
-                    Debug.Write(WindowHelpers.ShouldShowInTaskbar(hwnd));
-                    Debug.WriteLine(GetWindowText(hwnd));
-                    if (WindowHelpers.ShouldShowInTaskbar(hwnd) && _trackedWindows.TryAdd(hwnd, 0))
+                    // 窗口创建或变为可见
+                    try
                     {
-                        var title = GetWindowText(hwnd);
-                        PostToUI(() => ButtonAdded?.Invoke(hwnd, title));
+                        if (WindowHelpers.ShouldShowInTaskbar(hwnd) && _trackedWindows.TryAdd(hwnd, 0))
+                        {
+                            var title = GetWindowText(hwnd);
+                            PostToUI(() => ButtonAdded?.Invoke(hwnd, title));
+                        }
+                        else
+                        {
+                            // 对于 UWP 窗口，AUMID 或可见性可能在短时间后才就绪，延迟复查
+                            if (WindowHelpers.IsUwpWindow(hwnd) && !_trackedWindows.ContainsKey(hwnd))
+                            {
+                                Task.Run(async () =>
+                                {
+                                    await Task.Delay(600);
+                                    try
+                                    {
+                                        if (WindowHelpers.ShouldShowInTaskbar(hwnd) && _trackedWindows.TryAdd(hwnd, 0))
+                                        {
+                                            var title2 = GetWindowText(hwnd);
+                                            PostToUI(() => ButtonAdded?.Invoke(hwnd, title2));
+                                        }
+                                    }
+                                    catch { }
+                                });
+                            }
+                        }
                     }
+                    catch { }
                     break;
 
                 case EVENT_OBJECT_HIDE:
@@ -82,15 +105,27 @@ namespace ExplorerRevolution.Common
                     break;
 
                 case EVENT_OBJECT_NAMECHANGE:
-                    // 标题变化（仅更新已跟踪的窗口）
+                    // 标题变化（更新已跟踪窗口）或尝试在 namechange 时添加之前未被跟踪但现在满足条件的窗口
                     if (_trackedWindows.ContainsKey(hwnd))
                     {
                         var newTitle = GetWindowText(hwnd);
                         PostToUI(() => ButtonTitleChanged?.Invoke(hwnd, newTitle));
                     }
+                    else
+                    {
+                        try
+                        {
+                            if (WindowHelpers.ShouldShowInTaskbar(hwnd) && _trackedWindows.TryAdd(hwnd, 0))
+                            {
+                                var title3 = GetWindowText(hwnd);
+                                PostToUI(() => ButtonAdded?.Invoke(hwnd, title3));
+                            }
+                        }
+                        catch { }
+                    }
                     break;
 
-                    // 忽略 CREATE 等事件
+                // 其它事件忽略
             }
         }
 

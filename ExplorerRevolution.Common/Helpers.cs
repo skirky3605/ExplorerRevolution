@@ -103,19 +103,33 @@ namespace ExplorerRevolution.Common
 
         public static bool IsUwpWindow(IntPtr hwnd)
         {
-            GetWindowThreadProcessId(hwnd, out uint pid);
+            if (hwnd == IntPtr.Zero) return false;
 
             try
             {
-                var process = Process.GetProcessById((int)pid);
+                // 优先直接读取窗口的 AppUserModelID，最可靠
+                var aumid = GetAppUserModelId(hwnd);
+                if (!string.IsNullOrEmpty(aumid)) return true;
 
-                return process.ProcessName =="ApplicationFrameHost" &&
-                       !string.IsNullOrEmpty(GetAppUserModelId(hwnd));
+                // 一些 UWP 窗口以 ApplicationFrameWindow 为顶级类名
+                var cls = GetWindowClassName(hwnd);
+                if (cls == "ApplicationFrameWindow") return true;
+
+                // 有时 AUMID 在子窗口上（被框架包装），尝试遍历子窗口查找
+                IntPtr child = FindWindowEx(hwnd, IntPtr.Zero, null, null);
+                while (child != IntPtr.Zero)
+                {
+                    aumid = GetAppUserModelId(child);
+                    if (!string.IsNullOrEmpty(aumid)) return true;
+                    child = FindWindowEx(hwnd, child, null, null);
+                }
             }
             catch
             {
-                return false;
+                // 忽略错误，按非 UWP 处理
             }
+
+            return false;
         }
     }
 }
