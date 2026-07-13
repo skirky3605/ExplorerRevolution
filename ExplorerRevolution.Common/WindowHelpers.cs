@@ -32,8 +32,8 @@ namespace ExplorerRevolution.Common
 
         public static bool ShouldShowInTaskbar(IntPtr hWnd)
         {
-            //if (Helpers.IsUwpWindow(hWnd))
-            //    return true;
+            if (Helpers.IsUwpWindow(hWnd))
+                return true;
 
             if (!IsWindowVisible(hWnd)) return false;
 
@@ -111,7 +111,7 @@ namespace ExplorerRevolution.Common
         }
 
         // 检测 UWP 窗口
-        private static bool IsUwpApplicationWindow(IntPtr hwnd)
+        /*private static bool IsUwpApplicationWindow(IntPtr hwnd)
         {
             // 方法 A：快速通过窗口类名识别
             var className = GetWindowClassName(hwnd);
@@ -124,6 +124,22 @@ namespace ExplorerRevolution.Common
                 return true;
 
             return false;
+        }*/
+        public static bool IsUwpWindow(IntPtr hwnd)
+        {
+            GetWindowThreadProcessId(hwnd, out uint pid);
+
+            try
+            {
+                var process = Process.GetProcessById((int)pid);
+
+                return process.ProcessName ==
+                       "ApplicationFrameHost";
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public static async Task<Windows.UI.Xaml.Media.Imaging.BitmapImage> GetUwpAppIconAsync(string aumid)
