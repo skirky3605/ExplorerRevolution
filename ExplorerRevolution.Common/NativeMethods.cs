@@ -174,15 +174,33 @@ namespace ExplorerRevolution.Common
         public const int WS_EX_TRANSPARENT = 0x00000020;
         public const uint WS_EX_APPWINDOW = 0x00040000;
         public const uint GW_OWNER = 4;
+        public const uint WINEVENT_OUTOFCONTEXT = 0x0000;
+        public const uint WINEVENT_SKIPOWNPROCESS = 0x0002;
+        public const uint EVENT_OBJECT_SHOW = 0x8002;
+        public const uint EVENT_OBJECT_HIDE = 0x8003;
+        public const uint EVENT_OBJECT_CREATE = 0x8000;
+        public const uint EVENT_OBJECT_DESTROY = 0x8001;
+        public const uint EVENT_OBJECT_NAMECHANGE = 0x800C;
+        public const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetParent(IntPtr hWnd);
 
         [DllImport("user32.dll")]
         public static extern bool IsWindowVisible(IntPtr hWnd);
 
         [DllImport("user32.dll")]
-        public static extern int GetWindowText(
-            IntPtr hWnd,
-            StringBuilder lpString,
-            int nMaxCount);
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+        public static string GetWindowText(IntPtr hwnd)
+        {
+            var sb = new StringBuilder(256);
+            GetWindowText(hwnd, sb, sb.Capacity);
+            return sb.ToString();
+        }
+
+
+        [DllImport("user32.dll")]
+        public static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
         [DllImport("user32.dll")]
         public static extern int GetWindowTextLength(
@@ -239,6 +257,33 @@ namespace ExplorerRevolution.Common
 
         [DllImport("user32.dll")]
         public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+        public static string GetWindowClassName(IntPtr hwnd)
+        {
+            var sb = new StringBuilder(256);
+            GetClassName(hwnd, sb, sb.Capacity);
+            return sb.ToString();
+        }
+
+        [DllImport("user32.dll")]
+        public static extern uint GetWindowThreadProcessId(
+       IntPtr hWnd,
+       out uint processId);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+        public static extern int GetApplicationUserModelId(
+            IntPtr hProcess,
+            ref uint appModelIdLength,
+            IntPtr appModelId);
+
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr OpenProcess(
+            uint access,
+            bool inheritHandle,
+            uint processId);
+
+        [DllImport("kernel32.dll")]
+        public static extern bool CloseHandle(IntPtr handle);
 
         public static string GetAppUserModelId(IntPtr hWnd)
         {

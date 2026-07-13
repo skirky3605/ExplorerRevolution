@@ -32,6 +32,9 @@ namespace ExplorerRevolution.Common
 
         public static bool ShouldShowInTaskbar(IntPtr hWnd)
         {
+            //if (Helpers.IsUwpWindow(hWnd))
+            //    return true;
+
             if (!IsWindowVisible(hWnd)) return false;
 
             // Cloaked 窗口不显示（UWP 后台窗口、虚拟桌面不在当前桌面的窗口）
@@ -105,6 +108,22 @@ namespace ExplorerRevolution.Common
             var sb = new StringBuilder(256);
             GetWindowText(hWnd, sb, 256);
             return sb.ToString();
+        }
+
+        // 检测 UWP 窗口
+        private static bool IsUwpApplicationWindow(IntPtr hwnd)
+        {
+            // 方法 A：快速通过窗口类名识别
+            var className = GetWindowClassName(hwnd);
+            if (className == "ApplicationFrameWindow")
+                return true;
+
+            // 方法 B：通过是否存在 AppUserModelID 判断（更可靠但稍慢）
+            // 可以仅在类名不确定时调用
+            if (!string.IsNullOrEmpty(GetAppUserModelId(hwnd)))
+                return true;
+
+            return false;
         }
 
         public static async Task<Windows.UI.Xaml.Media.Imaging.BitmapImage> GetUwpAppIconAsync(string aumid)

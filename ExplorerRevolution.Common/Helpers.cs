@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
@@ -37,6 +38,65 @@ namespace ExplorerRevolution.Common
             exStyle |= WS_EX_TOOLWINDOW;
             exStyle &= ~(int)WS_EX_APPWINDOW;
             SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
+        }
+
+        public static bool IsUwpWindow(IntPtr hwnd)
+        {
+            if (hwnd == IntPtr.Zero)
+                return false;
+
+            GetWindowThreadProcessId(hwnd, out uint pid);
+
+            IntPtr process = OpenProcess(
+                PROCESS_QUERY_LIMITED_INFORMATION,
+                false,
+                pid);
+
+            if (process == IntPtr.Zero)
+                return false;
+
+            try
+            {
+                uint length = 0;
+
+                // 第一次调用获取长度
+                GetApplicationUserModelId(
+                    process,
+                    ref length,
+                    IntPtr.Zero);
+
+                if (length == 0)
+                    return false;
+
+                IntPtr buffer = Marshal.AllocHGlobal((int)length);
+
+                try
+                {
+                    int result = GetApplicationUserModelId(
+                        process,
+                        ref length,
+                        buffer);
+
+                    if (result == 0)
+                    {
+                        string aumid =
+                            Marshal.PtrToStringUni(buffer);
+
+                        // 有 AUMID 基本就是 UWP/打包应用
+                        return !string.IsNullOrEmpty(aumid);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(buffer);
+                }
+            }
+            finally
+            {
+                CloseHandle(process);
+            }
+
+            return false;
         }
     }
 }

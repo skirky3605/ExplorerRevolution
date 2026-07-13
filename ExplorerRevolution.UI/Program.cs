@@ -25,14 +25,6 @@ namespace ExplorerRevolution
             {
                 HookExplorer.RestoreExplorer();
             };
-            // Only for test
-            var listWindow = WindowHelpers.GetTaskbarWindows();
-            foreach (var ptr in listWindow)
-            {
-                Debug.WriteLine(ptr);
-                Debug.WriteLine(WindowHelpers.GetWindowTitle(ptr));
-                WindowHelpers.GetWindowIcon(ptr);
-            }
 
             Application.Run(new ShellContext());
 
