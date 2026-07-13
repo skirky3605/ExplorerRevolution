@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -40,6 +41,7 @@ namespace ExplorerRevolution.Common
             SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
         }
 
+        /*
         public static bool IsUwpWindow(IntPtr hwnd)
         {
             if (hwnd == IntPtr.Zero)
@@ -97,6 +99,22 @@ namespace ExplorerRevolution.Common
             }
 
             return false;
+        }*/
+        public static bool IsUwpWindow(IntPtr hwnd)
+        {
+            GetWindowThreadProcessId(hwnd, out uint pid);
+
+            try
+            {
+                var process = Process.GetProcessById((int)pid);
+
+                return process.ProcessName ==
+                       "ApplicationFrameHost";
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

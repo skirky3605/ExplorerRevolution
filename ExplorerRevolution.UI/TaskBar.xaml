@@ -39,83 +39,85 @@
                 </StackPanel.Transitions>
             </StackPanel>
 
-            <GridView
-                Name="TaskBarItemsControl"
-                Height="64"
-                Margin="256,1,256,1"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Top"
-                AllowDrop="True"
-                CanReorderItems="True"
-                ItemsSource="{x:Bind taskBarIcons, Mode=TwoWay}"
-                Loaded="TaskBarItemsControl_Loaded"
-                ScrollViewer.BringIntoViewOnFocusChange="False"
-                ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-                ScrollViewer.HorizontalScrollMode="Disabled"
-                ScrollViewer.IsVerticalRailEnabled="False"
-                ScrollViewer.VerticalScrollBarVisibility="Hidden"
-                ScrollViewer.VerticalScrollMode="Disabled"
-                SelectionChanged="TaskBarItemsControl_SelectionChanged"
-                SelectionMode="Extended"
-                ShowsScrollingPlaceholders="False">
+            <GridView Margin="0,1,220,1"
+    SelectionMode="Extended" AllowDrop="True" CanReorderItems="True"
+    Name="TaskBarItemsControl"
+    HorizontalAlignment="Stretch"
+    VerticalAlignment="Top" Height="64"
+    Loaded="TaskBarItemsControl_Loaded" ItemClick="TaskBarItemsControl_ItemClick" IsItemClickEnabled="True" ItemsSource="{x:Bind taskBarIcons,Mode=TwoWay}" ScrollViewer.BringIntoViewOnFocusChange="False" ShowsScrollingPlaceholders="False" ScrollViewer.HorizontalScrollMode="Auto" ScrollViewer.HorizontalScrollBarVisibility="Hidden" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.VerticalScrollMode="Disabled" SelectionChanged="TaskBarItemsControl_SelectionChanged" ScrollViewer.VerticalScrollBarVisibility="Hidden" >
+
                 <GridView.ItemContainerTransitions>
                     <TransitionCollection>
-                        <RepositionThemeTransition IsStaggeringEnabled="True" />
+                        <RepositionThemeTransition IsStaggeringEnabled="False" />
+                        <PopupThemeTransition/>
                     </TransitionCollection>
                 </GridView.ItemContainerTransitions>
+
+                <GridView.ItemContainerStyle>
+                    <Style TargetType="GridViewItem">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="GridViewItem">
+                                    <GridViewItemPresenter x:Name="Root" CornerRadius="8" Margin="0,1,0,-2"
+                                               DragBackground="Transparent"
+                                              >
+                                    </GridViewItemPresenter>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </GridView.ItemContainerStyle>
+
                 <GridView.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel
-                            Height="50"
-                            Margin="0,0,0,4"
-                            Orientation="Horizontal"
-                            Spacing="0" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="0" Height="48" Margin="220,0,0,8" CornerRadius="1" >
+                            <StackPanel.Transitions>
+                                <TransitionCollection>
+                                    <RepositionThemeTransition />
+                                    <PaneThemeTransition/>
+                                </TransitionCollection>
+                            </StackPanel.Transitions>
+                        </StackPanel>
                     </ItemsPanelTemplate>
                 </GridView.ItemsPanel>
                 <GridView.ItemTemplate>
                     <DataTemplate x:DataType="data:TaskBarIcon">
-                        <Grid
-                            Height="46"
-                            MaxWidth="128"
-                            Padding="0"
-                            Background="Transparent"
-                            BorderBrush="Transparent">
-                            <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal">
-                                <Image
-                                    Width="24"
-                                    Height="24"
-                                    Margin="1,0,1,1"
-                                    Source="{x:Bind Icon, Mode=OneWay}" />
-                                <TextBlock
-                                    Margin="4,0,0,2"
-                                    VerticalAlignment="Center"
-                                    Text="{x:Bind Title, Mode=OneWay}"
-                                    Visibility="{x:Bind ButtonTitleVisibility, Mode=OneWay}" />
+                        <Grid MaxWidth="128"
+                Height="40"
+                Padding="0"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                CornerRadius="0"
+                Margin="6,0,6,1">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                                <Image Margin="4,0,1,1"
+                    Width="24"
+                    Height="24"
+                    Source="{x:Bind Icon}" HorizontalAlignment="Center" />
+                                <TextBlock Text="{x:Bind Title}"  VerticalAlignment="Center" Margin="4,0,0,2"  Visibility="{x:Bind ButtonTitleVisibility}"/>
                             </StackPanel>
-                            <Grid
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                Background="Transparent" />
-                            <Button
-                                Margin="-5,0,-5,-1"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                Background="Transparent"
-                                BorderBrush="Transparent"
-                                ClickMode="Hover"
-                                CornerRadius="8"
-                                IsTabStop="False"
-                                Opacity="0.9" />
+                            <ToggleButton
+                    Width="24"
+                    Height="12"
+                    Background="{ThemeResource AccentFillColorDisabledBrush}" CornerRadius="8"
+                    IsChecked="{x:Bind IsForeground}" Visibility="{x:Bind IsActive}" HorizontalAlignment="Center" VerticalAlignment="Bottom"  Margin="0,0,0,1" IsTabStop="False" >
+
+                                <ToggleButton.RenderTransform>
+                                    <ScaleTransform CenterX="12" CenterY="12" ScaleX="0.3333" ScaleY="0.25"/>
+                                </ToggleButton.RenderTransform>
+                            </ToggleButton>
+                            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent"/>
+                            <Button HorizontalAlignment="Stretch" IsTabStop="False" Margin="-6,-1,-6,-1" VerticalAlignment="Stretch" ClickMode="Hover" BorderBrush="Transparent" Opacity="0.8" CornerRadius="8" Background="Transparent"/>
                         </Grid>
                     </DataTemplate>
                 </GridView.ItemTemplate>
             </GridView>
             <Grid Name="TbLeftBottomArea" HorizontalAlignment="Left">
                 <StackPanel
-                    Name="TbRbLeftBottomAreaStk"
-                    Margin="4,0,4,0"
-                    VerticalAlignment="Stretch">
-                    <TextBlock VerticalAlignment="Center" Text="左下角预留空间" />
+        Name="TbRbLeftBottomAreaStk"
+        Margin="4,0,4,0"
+        VerticalAlignment="Stretch">
+                    <TextBlock VerticalAlignment="Center" Text="左下角预留空间" Visibility="Collapsed" />
                 </StackPanel>
             </Grid>
             <StackPanel

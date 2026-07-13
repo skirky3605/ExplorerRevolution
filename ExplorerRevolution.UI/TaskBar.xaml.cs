@@ -36,6 +36,20 @@ namespace ExplorerRevolution.UI
         public TaskBar()
         {
             this.InitializeComponent();
+            this.Unloaded += TaskBar_Unloaded;
+
+            // 订阅 TaskBarItemsControl 中的 ScrollViewer.ViewChanged 事件
+            // 在 GridView 的容器生成后（Loaded）查找 ScrollViewer 并订阅事件
+            TaskBarItemsControl.Loaded += (s, e) =>
+            {
+                taskBarScrollViewer = FindDescendant<ScrollViewer>(TaskBarItemsControl);
+                if (taskBarScrollViewer != null)
+                {
+                    taskBarScrollViewer.ViewChanged += TaskBarScrollViewer_ViewChanged;
+                    // 初始保存 offset
+                    TaskBarScrollHorizontalOffset = taskBarScrollViewer.HorizontalOffset;
+                }
+            };
         }
 
         private void TaskBarGrid_Loaded(object sender, RoutedEventArgs e)
@@ -246,10 +260,12 @@ namespace ExplorerRevolution.UI
         }
         ObservableCollection<TaskBarIcon> taskBarIcons = new();
 
+        private Common.TaskbarButtonMonitor _monitor;
+
         private void TaskBarItemsControl_Loaded(object sender, RoutedEventArgs e)
         {
-            var monitor = new Common.TaskbarButtonMonitor();
-            monitor.ButtonAdded += (intPtr, title) =>
+            _monitor = new Common.TaskbarButtonMonitor();
+            _monitor.ButtonAdded += (intPtr, title) =>
             {
                 if (!taskBarIcons.Select(icon => icon.IntPtr).Contains(intPtr)){
                     _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => {
@@ -258,15 +274,15 @@ namespace ExplorerRevolution.UI
                             IntPtr = intPtr,
                             Title = GetWindowTitle(intPtr),
                             Icon = await GetWindowIconAsync(intPtr),
-                            IsActive = Visibility.Visible,
-                            IsForeground = TbTitleVisibility,
-                            ButtonTitleVisibility = TbTitleVisibility ? Visibility.Collapsed : Visibility.Visible
+                            IsActive = Visibility.Visible, //存在此窗口
+                            IsForeground = TbTitleVisibility, //此窗口在前台
+                            ButtonTitleVisibility = TbTitleVisibility ? Visibility.Visible : Visibility.Collapsed
                         };
                         taskBarIcons.Add(taskBarIcon);
                     });
                 }
             };
-            monitor.ButtonTitleChanged += (intPtr, title) =>
+            _monitor.ButtonTitleChanged += (intPtr, title) =>
             {
                 foreach (var icon in taskBarIcons)
                 {
@@ -280,7 +296,7 @@ namespace ExplorerRevolution.UI
                     }
                 }
             };
-            monitor.ButtonRemoved += (intPtr, title) =>
+            _monitor.ButtonRemoved += (intPtr, title) =>
             {
                 foreach (var icon in taskBarIcons)
                 {
@@ -294,7 +310,17 @@ namespace ExplorerRevolution.UI
                     }
                 }
             };
-            monitor.Start();
+            _monitor.Start();
+        }
+
+        private void TaskBar_Unloaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                _monitor?.Dispose();
+                _monitor = null;
+            }
+            catch { }
         }
 
         public static async Task<BitmapImage> GetWindowIconAsync(IntPtr hWnd)
@@ -344,9 +370,101 @@ namespace ExplorerRevolution.UI
         private void TaskBarItemsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             //不要用changed，用clicked
-            (sender as GridView).SelectedIndex = (sender as GridView).SelectedIndex;
-            //(sender as GridView).SelectedIndex = -1;
-            SetHighlightButton((sender as GridView).SelectedIndex);
+        }
+
+        private void TaskBarItemsControl_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            int index = TaskBarItemsControl.Items.IndexOf(e.ClickedItem);
+            GetOffsetOfTbIndex(index);
+        }
+
+        public double GetOffsetOfTbIndex(int index) // 相对整个任务栏的坐标，用上ScrollViewer的Offset
+        {
+            // 获取被点击项的索引并输出
+            //Debug.WriteLine($"Clicked item index: {index}");
+
+            var itemContainer = TaskBarItemsControl.ContainerFromIndex(index) as GridViewItem;
+            if (itemContainer == null)
+            {
+                //Debug.WriteLine("Item container is null (可能尚未生成)");
+                return -1;
+            }
+
+            // 尝试获取 ItemsPanel（你的 ItemsPanelTemplate 使用的是 StackPanel）
+            var itemsPanel = TaskBarItemsControl.ItemsPanelRoot as Panel;
+
+            // 确保有 ScrollViewer 引用
+            if (taskBarScrollViewer == null)
+            {
+                taskBarScrollViewer = FindDescendant<ScrollViewer>(TaskBarItemsControl);
+            }
+
+            if (itemsPanel != null)
+            {
+                // item 在 itemsPanel（内容坐标系）中的位置
+                GeneralTransform itemToItemsPanel = itemContainer.TransformToVisual(itemsPanel);
+                Windows.Foundation.Point contentPos = itemToItemsPanel.TransformPoint(new Windows.Foundation.Point(0, 0));
+
+                double scrollOffset = taskBarScrollViewer?.HorizontalOffset ?? 0.0;
+
+                // itemsPanel 相对于整个 TaskBarGrid 的偏移（例如 ScrollViewer 放置位置）
+                double itemsPanelOffsetX = 0.0;
+                try
+                {
+                    var itemsPanelToTaskBar = itemsPanel.TransformToVisual(TaskBarGrid);
+                    var p = itemsPanelToTaskBar.TransformPoint(new Windows.Foundation.Point(0, 0));
+                    itemsPanelOffsetX = p.X;
+                }
+                catch
+                {
+                    itemsPanelOffsetX = 0.0;
+                }
+
+                // 计算相对于整个任务栏（TaskBarGrid）的 X：内容坐标 - 滚动偏移 + itemsPanel 在 TaskBarGrid 的偏移
+                double finalX = contentPos.X - scrollOffset + itemsPanelOffsetX;
+                //Debug.WriteLine($"contentPos.X={contentPos.X}, scrollOffset={scrollOffset}, itemsPanelOffsetX={itemsPanelOffsetX}, finalX={finalX}");
+                return finalX;
+            }
+
+            // 退回到相对于整个 GridView 的坐标（不包含额外的 scroll 计算）
+            GeneralTransform transform = itemContainer.TransformToVisual(TaskBarItemsControl);
+            Windows.Foundation.Point position = transform.TransformPoint(new Windows.Foundation.Point(0, 0));
+            //Debug.WriteLine($"Fallback GridView-relative X={position.X}");
+            return position.X;
+        }
+
+        // ScrollViewer 及偏移量，用于保存当前滚动位置
+        private ScrollViewer taskBarScrollViewer;
+        private double TaskBarScrollHorizontalOffset = 0.0;
+
+        // 查找可视树中指定类型的后代元素（递归）
+        private T FindDescendant<T>(DependencyObject parent) where T : DependencyObject
+        {
+            if (parent == null) return null;
+            int count = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < count; i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T t) return t;
+                var result = FindDescendant<T>(child);
+                if (result != null) return result;
+            }
+            return null;
+        }
+
+        private void TaskBarScrollViewer_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+        {
+            if (taskBarScrollViewer != null)
+            {
+                TaskBarScrollHorizontalOffset = taskBarScrollViewer.HorizontalOffset;
+                //Debug.WriteLine($"TaskBar Scroll HorizontalOffset = {TaskBarScrollHorizontalOffset}");
+
+                if (TaskBarScrollHorizontalOffset > 220)
+                {
+                    //将开始按钮独立放置
+
+                }
+            }
         }
     }
 }
