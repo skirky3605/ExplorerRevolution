@@ -33,6 +33,8 @@ namespace ExplorerRevolution.UI
 {
     public sealed partial class TaskBar : Page
     {
+        ManagedShell.ShellManager shellManager = new ManagedShell.ShellManager();
+
         public TaskBar()
         {
             this.InitializeComponent();
@@ -57,6 +59,7 @@ namespace ExplorerRevolution.UI
         }
 
         public void SetHighlightButton(int index)
+
         {
             //if (index < TaskBarItemsControl.Children.Count() && index >= 0)
             //{
@@ -88,7 +91,6 @@ namespace ExplorerRevolution.UI
             //    }
             //}
         }
-
         public int GetHighlightButton()
         {
             return -1;
@@ -264,61 +266,66 @@ namespace ExplorerRevolution.UI
 
         private void TaskBarItemsControl_Loaded(object sender, RoutedEventArgs e)
         {
-            _monitor = new Common.TaskbarButtonMonitor();
-            _monitor.ButtonAdded += (intPtr, title) =>
-            {
-                if (!taskBarIcons.Select(icon => icon.IntPtr).Contains(intPtr)){
-                    _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => {
-                        var taskBarIcon = new TaskBarIcon()
-                        {
-                            IntPtr = intPtr,
-                            Title = GetWindowTitle(intPtr),
-                            Icon = await GetWindowIconAsync(intPtr),
-                            IsActive = Visibility.Visible, //存在此窗口
-                            IsForeground = TbTitleVisibility, //此窗口在前台
-                            ButtonTitleVisibility = TbTitleVisibility ? Visibility.Visible : Visibility.Collapsed
-                        };
-                        taskBarIcons.Add(taskBarIcon);
-                    });
-                }
-            };
-            _monitor.ButtonTitleChanged += (intPtr, title) =>
-            {
-                foreach (var icon in taskBarIcons)
-                {
-                    if (icon.IntPtr == intPtr)
-                    {
-                        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                        {
-                            icon.Title = title;
-                        });
-                        break;
-                    }
-                }
-            };
-            _monitor.ButtonRemoved += (intPtr, title) =>
-            {
-                foreach (var icon in taskBarIcons)
-                {
-                    if (icon.IntPtr == intPtr)
-                    {
-                        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                        {
-                            taskBarIcons.Remove(icon);
-                        });
-                        break;
-                    }
-                }
-            };
-            _monitor.Start();
+            TaskBarItemsControl.ItemsSource = shellManager.Tasks.GroupedWindows;
+            shellManager.Tasks.Initialize();
+
+            //_monitor = new Common.TaskbarButtonMonitor();
+            //_monitor.ButtonAdded += (intPtr, title) =>
+            //{
+            //    if (!taskBarIcons.Select(icon => icon.IntPtr).Contains(intPtr)){
+            //        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => {
+            //            var taskBarIcon = new TaskBarIcon()
+            //            {
+            //                IntPtr = intPtr,
+            //                Title = GetWindowTitle(intPtr),
+            //                Icon = await GetWindowIconAsync(intPtr),
+            //                IsActive = Visibility.Visible, //存在此窗口
+            //                IsForeground = TbTitleVisibility, //此窗口在前台
+            //                ButtonTitleVisibility = TbTitleVisibility ? Visibility.Visible : Visibility.Collapsed
+            //            };
+            //            taskBarIcons.Add(taskBarIcon);
+            //        });
+            //    }
+            //};
+            //_monitor.ButtonTitleChanged += (intPtr, title) =>
+            //{
+            //    foreach (var icon in taskBarIcons)
+            //    {
+            //        if (icon.IntPtr == intPtr)
+            //        {
+            //            _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            //            {
+            //                icon.Title = title;
+            //            });
+            //            break;
+            //        }
+            //    }
+            //};
+            //_monitor.ButtonRemoved += (intPtr, title) =>
+            //{
+            //    foreach (var icon in taskBarIcons)
+            //    {
+            //        if (icon.IntPtr == intPtr)
+            //        {
+            //            _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            //            {
+            //                taskBarIcons.Remove(icon);
+            //            });
+            //            break;
+            //        }
+            //    }
+            //};
+            //_monitor.Start();
         }
 
         private void TaskBar_Unloaded(object sender, RoutedEventArgs e)
         {
             try
             {
-                _monitor?.Dispose();
-                _monitor = null;
+                //_monitor?.Dispose();
+                //_monitor = null;
+                shellManager?.Dispose();
+                shellManager = null;
             }
             catch { }
         }

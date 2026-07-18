@@ -14,17 +14,26 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.28000.1839" />
+    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.28000.2270" />
     <PackageReference Include="Mile.Xaml" Version="2.5.1616" />	
     <PackageReference Include="System.Numerics.Vectors" Version="4.6.1" />
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\..\libs\ManagedShell\src\ManagedShell.AppBar\ManagedShell.AppBar.csproj" />
+    <ProjectReference Include="..\..\libs\ManagedShell\src\ManagedShell.Common\ManagedShell.Common.csproj" />
+    <ProjectReference Include="..\..\libs\ManagedShell\src\ManagedShell.Interop\ManagedShell.Interop.csproj" />
+    <ProjectReference Include="..\..\libs\ManagedShell\src\ManagedShell.ShellFolders\ManagedShell.ShellFolders.csproj" />
+    <ProjectReference Include="..\..\libs\ManagedShell\src\ManagedShell.UWPInterop\ManagedShell.UWPInterop.csproj" />
+    <ProjectReference Include="..\..\libs\ManagedShell\src\ManagedShell.WindowsTasks\ManagedShell.WindowsTasks.csproj" />
+    <ProjectReference Include="..\..\libs\ManagedShell\src\ManagedShell.WindowsTray\ManagedShell.WindowsTray.csproj" />
+    <ProjectReference Include="..\..\libs\ManagedShell\src\ManagedShell\ManagedShell.csproj" />
     <ProjectReference Include="..\ExplorerRevolution.Common\ExplorerRevolution.Common.csproj" />
   </ItemGroup>
   
   <ItemGroup>
     <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
 	

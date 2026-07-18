@@ -1,4 +1,14 @@
 <Solution>
-  <Project Path="ExplorerRevolution.Common/ExplorerRevolution.Common.csproj" Id="0de0755b-368d-4a80-892d-481c4a544a38" />
-  <Project Path="ExplorerRevolution.UI/ExplorerRevolution.UI.csproj" />
+  <Folder Name="/Libs/">
+    <Project Path="libs/ManagedShell/src/ManagedShell.AppBar/ManagedShell.AppBar.csproj" />
+    <Project Path="libs/ManagedShell/src/ManagedShell.Common/ManagedShell.Common.csproj" />
+    <Project Path="libs/ManagedShell/src/ManagedShell.Interop/ManagedShell.Interop.csproj" />
+    <Project Path="libs/ManagedShell/src/ManagedShell.ShellFolders/ManagedShell.ShellFolders.csproj" />
+    <Project Path="libs/ManagedShell/src/ManagedShell.UWPInterop/ManagedShell.UWPInterop.csproj" />
+    <Project Path="libs/ManagedShell/src/ManagedShell.WindowsTasks/ManagedShell.WindowsTasks.csproj" />
+    <Project Path="libs/ManagedShell/src/ManagedShell.WindowsTray/ManagedShell.WindowsTray.csproj" />
+    <Project Path="libs/ManagedShell/src/ManagedShell/ManagedShell.csproj" />
+  </Folder>
+  <Project Path="src/ExplorerRevolution.Common/ExplorerRevolution.Common.csproj" Id="0de0755b-368d-4a80-892d-481c4a544a38" />
+  <Project Path="src/ExplorerRevolution.UI/ExplorerRevolution.UI.csproj" />
 </Solution>
