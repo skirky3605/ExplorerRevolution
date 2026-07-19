@@ -10,8 +10,11 @@ using System.Windows.Forms;
 
 namespace ExplorerRevolution.UI
 {
+
     public class ShellContext : ApplicationContext
     {
+        public static ManagedShell.ShellManager shellManager = new ManagedShell.ShellManager();
+
         public Form DesktopForm { get; }
         public Form TaskBarForm { get; }
 
