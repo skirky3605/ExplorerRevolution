@@ -33,6 +33,8 @@ namespace ExplorerRevolution.UI
 {
     public sealed partial class TaskBar : Page
     {
+        ManagedShell.ShellManager shellManager = new ManagedShell.ShellManager();
+
         public TaskBar()
         {
             this.InitializeComponent();
@@ -264,8 +266,8 @@ namespace ExplorerRevolution.UI
 
         private void TaskBarItemsControl_Loaded(object sender, RoutedEventArgs e)
         {
-            TaskBarItemsControl.ItemsSource = ShellContext.shellManager.Tasks.GroupedWindows;
-            ShellContext.shellManager.Tasks.Initialize();
+            TaskBarItemsControl.ItemsSource = shellManager.Tasks.GroupedWindows;
+            shellManager.Tasks.Initialize();
 
             //_monitor = new Common.TaskbarButtonMonitor();
             //_monitor.ButtonAdded += (intPtr, title) =>
@@ -322,8 +324,8 @@ namespace ExplorerRevolution.UI
             {
                 //_monitor?.Dispose();
                 //_monitor = null;
-                ShellContext.shellManager?.Dispose();
-                ShellContext.shellManager = null;
+                shellManager?.Dispose();
+                shellManager = null;
             }
             catch { }
         }

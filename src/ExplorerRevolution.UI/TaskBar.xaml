@@ -118,7 +118,7 @@
                                     Height="24"
                                     Margin="4,0,1,1"
                                     HorizontalAlignment="Center"
-                                    Source="{x:Bind UwpIcon}" />
+                                    Source="{x:Bind Icon}" />
                                 <TextBlock
                                     Margin="4,0,0,2"
                                     VerticalAlignment="Center"

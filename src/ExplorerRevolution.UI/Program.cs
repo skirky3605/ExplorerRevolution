@@ -12,8 +12,6 @@ using Application = System.Windows.Forms.Application;
 
 namespace ExplorerRevolution
 {
-
-
     public static class Program
     {
         [STAThread]
@@ -26,7 +24,6 @@ namespace ExplorerRevolution
             AppDomain.CurrentDomain.ProcessExit += (s, e) =>
             {
                 HookExplorer.RestoreExplorer();
-                ShellContext.shellManager.ExplorerHelper.HideExplorerTaskbar = false;
             };
 
             Application.Run(new ShellContext());
