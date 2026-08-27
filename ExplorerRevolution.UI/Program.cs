@@ -15,10 +15,20 @@ namespace ExplorerRevolution
     public static class Program
     {
         [STAThread]
-        private static void Main()
+        private static void Main(string[] args)
         {
+            // 看门狗模式:等待主进程结束(含被强制结束),恢复 explorer 原状
+            if (args.Length >= 2 && args[0] == "--watchdog")
+            {
+                Watchdog.Run(args[1]);
+                return;
+            }
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+
+            // 启动看门狗:即使本进程被"结束任务"强制终止,explorer 也能被恢复
+            Watchdog.Start(Process.GetCurrentProcess().Id);
 
             App app = new();
             AppDomain.CurrentDomain.ProcessExit += (s, e) =>
@@ -33,7 +43,7 @@ namespace ExplorerRevolution
 
         public static void Run()
         {
-            Main();
+            Main(Array.Empty<string>());
         }
     }
 }

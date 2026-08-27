@@ -17,6 +17,9 @@
             Background="{ThemeResource SystemControlAltHighAcrylicElementBrush}"
             CornerRadius="1"
             Loaded="TaskBarGrid_Loaded">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
             <Button
                 Height="2"
                 Margin="0,0,0,0"
@@ -26,25 +29,62 @@
                 BorderThickness="2"
                 CornerRadius="0"
                 IsEnabled="False" />
-            <StackPanel
-                Name="TaskBarStack"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Bottom"
-                Orientation="Horizontal"
-                Visibility="Collapsed">
-                <StackPanel.Transitions>
-                    <TransitionCollection>
-                        <RepositionThemeTransition />
-                    </TransitionCollection>
-                </StackPanel.Transitions>
-            </StackPanel>
 
-            <GridView Margin="0,1,220,1"
-    SelectionMode="Extended" AllowDrop="True" CanReorderItems="True"
-    Name="TaskBarItemsControl"
-    HorizontalAlignment="Stretch"
-    VerticalAlignment="Top" Height="64"
-    Loaded="TaskBarItemsControl_Loaded" ItemClick="TaskBarItemsControl_ItemClick" IsItemClickEnabled="True" ItemsSource="{x:Bind taskBarIcons,Mode=TwoWay}" ScrollViewer.BringIntoViewOnFocusChange="False" ShowsScrollingPlaceholders="False" ScrollViewer.HorizontalScrollMode="Auto" ScrollViewer.HorizontalScrollBarVisibility="Hidden" ScrollViewer.IsVerticalRailEnabled="False" ScrollViewer.VerticalScrollMode="Disabled" SelectionChanged="TaskBarItemsControl_SelectionChanged" ScrollViewer.VerticalScrollBarVisibility="Hidden" >
+            <!-- 居中区域:开始 / 任务视图 / 固定+运行应用(Win11 风格) -->
+            <Grid
+                x:Name="TaskBarCenterHost"
+                Grid.Column="0"
+                SizeChanged="TaskBarCenterHost_SizeChanged">
+                <StackPanel
+                    x:Name="TaskBarCenterStack"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    SizeChanged="TaskBarCenterStack_SizeChanged">
+                <Button
+                    x:Name="StartButton"
+                    Width="48"
+                    Height="48"
+                    Padding="0"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Click="StartButton_Click"
+                    CornerRadius="8"
+                    ToolTipService.ToolTip="开始">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="18" Glyph="&#xE700;" />
+                </Button>
+                <Button
+                    x:Name="TaskViewButton"
+                    Width="48"
+                    Height="48"
+                    Padding="0"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Click="TaskViewButton_Click"
+                    CornerRadius="8"
+                    ToolTipService.ToolTip="任务视图">
+                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="18" Glyph="&#xE7C4;" />
+                </Button>
+                <GridView
+                    x:Name="TaskBarItemsControl"
+                    Margin="4,1,0,1"
+                    SelectionMode="Extended"
+                    AllowDrop="True"
+                    CanReorderItems="True"
+                    VerticalAlignment="Center"
+                    Height="48"
+                    Loaded="TaskBarItemsControl_Loaded"
+                    ItemClick="TaskBarItemsControl_ItemClick"
+                    IsItemClickEnabled="True"
+                    ItemsSource="{x:Bind taskBarApps, Mode=TwoWay}"
+                    ScrollViewer.BringIntoViewOnFocusChange="False"
+                    ShowsScrollingPlaceholders="False"
+                    ScrollViewer.HorizontalScrollMode="Auto"
+                    ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                    ScrollViewer.IsVerticalRailEnabled="False"
+                    ScrollViewer.VerticalScrollMode="Disabled"
+                    SelectionChanged="TaskBarItemsControl_SelectionChanged"
+                    ScrollViewer.VerticalScrollBarVisibility="Hidden">
 
                 <GridView.ItemContainerTransitions>
                     <TransitionCollection>
@@ -70,7 +110,7 @@
 
                 <GridView.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="0" Height="48" Margin="220,0,0,8" CornerRadius="1" >
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="0" Height="48" Margin="0,0,0,8" CornerRadius="1" >
                             <StackPanel.Transitions>
                                 <TransitionCollection>
                                     <RepositionThemeTransition />
@@ -81,7 +121,7 @@
                     </ItemsPanelTemplate>
                 </GridView.ItemsPanel>
                 <GridView.ItemTemplate>
-                    <DataTemplate x:DataType="data:TaskBarIcon">
+                    <DataTemplate x:DataType="data:TaskBarApp">
                         <Grid MaxWidth="128"
                 Height="40"
                 Padding="0"
@@ -93,38 +133,34 @@
                                 <Image Margin="4,0,1,1"
                     Width="24"
                     Height="24"
-                    Source="{x:Bind Icon}" HorizontalAlignment="Center" />
-                                <TextBlock Text="{x:Bind Title}"  VerticalAlignment="Center" Margin="4,0,0,2"  Visibility="{x:Bind ButtonTitleVisibility}"/>
+                    Source="{x:Bind Icon, Mode=OneWay}" HorizontalAlignment="Center" />
+                                <TextBlock Text="{x:Bind Title, Mode=OneWay}"  VerticalAlignment="Center" Margin="4,0,0,2"  Visibility="{x:Bind ButtonTitleVisibility, Mode=OneWay}"/>
                             </StackPanel>
                             <ToggleButton
                     Width="24"
                     Height="12"
                     Background="{ThemeResource AccentFillColorDisabledBrush}" CornerRadius="8"
-                    IsChecked="{x:Bind IsForeground}" Visibility="{x:Bind IsActive}" HorizontalAlignment="Center" VerticalAlignment="Bottom"  Margin="0,0,0,1" IsTabStop="False" >
+                    IsChecked="{x:Bind IsForeground, Mode=OneWay}" Visibility="{x:Bind IsActive, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Bottom"  Margin="0,0,0,1" IsTabStop="False" >
 
                                 <ToggleButton.RenderTransform>
                                     <ScaleTransform CenterX="12" CenterY="12" ScaleX="0.3333" ScaleY="0.25"/>
                                 </ToggleButton.RenderTransform>
                             </ToggleButton>
                             <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent"/>
-                            <Button HorizontalAlignment="Stretch" IsTabStop="False" Margin="-6,-1,-6,-1" VerticalAlignment="Stretch" ClickMode="Hover" BorderBrush="Transparent" Opacity="0.8" CornerRadius="8" Background="Transparent"/>
+                            <Button HorizontalAlignment="Stretch" IsTabStop="False" Margin="-6,-1,-6,-1" VerticalAlignment="Stretch" ClickMode="Release" Click="TaskbarButton_Click" BorderBrush="Transparent" Opacity="0.8" CornerRadius="8" Background="Transparent" ToolTipService.ToolTip="{x:Bind Title}"/>
                         </Grid>
                     </DataTemplate>
                 </GridView.ItemTemplate>
             </GridView>
-            <Grid Name="TbLeftBottomArea" HorizontalAlignment="Left">
-                <StackPanel
-        Name="TbRbLeftBottomAreaStk"
-        Margin="4,0,4,0"
-        VerticalAlignment="Stretch">
-                    <TextBlock VerticalAlignment="Center" Text="左下角预留空间" Visibility="Collapsed" />
                 </StackPanel>
             </Grid>
             <StackPanel
                 Name="TaskBarRightBottomStack"
-                Height="48"
+                Grid.Column="0"
                 HorizontalAlignment="Right"
+                Height="48"
                 VerticalAlignment="Bottom"
+                SizeChanged="TaskBarRightBottomStack_SizeChanged"
                 Orientation="Horizontal">
 
                 <Grid Name="TbRbBkgAppArea" Width="36">
@@ -165,12 +201,19 @@
                         CornerRadius="8"
                         Opacity="0.4" />
                 </Grid>
+                <StackPanel
+                    x:Name="TrayIconsPanel"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal" />
                 <Grid Name="TbRbKeyBoardArea">
                     <StackPanel
                         Name="TbRbKeyBoardAreaStk"
                         Margin="4,0,4,0"
                         VerticalAlignment="Stretch">
-                        <TextBlock VerticalAlignment="Center" Text="拼" />
+                        <TextBlock
+                            x:Name="TbRbImeText"
+                            VerticalAlignment="Center"
+                            Text="英" />
                     </StackPanel>
                 </Grid>
                 <Grid Name="TbRbStatusArea">

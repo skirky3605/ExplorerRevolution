@@ -41,6 +41,17 @@ namespace ExplorerRevolution.Common
             SetWindowLong(hWnd, GWL_EXSTYLE, exStyle);
         }
 
+        /// <summary>
+        /// 使窗口在点击时不夺取系统激活(前台)状态。
+        /// 任务栏采用此样式后,点击任务栏不会抢走焦点,切换/再点最小化逻辑才能可靠工作。
+        /// </summary>
+        public static void SetNoActivate(IntPtr hWnd)
+        {
+            int exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+            SetWindowLong(hWnd, GWL_EXSTYLE, exStyle | WS_EX_NOACTIVATE);
+        }
+
+
         /*
         public static bool IsUwpWindow(IntPtr hwnd)
         {

@@ -15,21 +15,33 @@ namespace ExplorerRevolution.UI
         public Form DesktopForm { get; }
         public Form TaskBarForm { get; }
 
+        /// <summary>任务栏窗体实例(供弹层定位等使用)。</summary>
+        public static Form TaskBarFormInstance { get; private set; }
+
+        private ShellFullscreenMonitor _fullscreenMonitor;
+        private TaskBar _taskbarPage;
+
         public ShellContext()
         {
             Common.HookExplorer.HideExplorer();
             DesktopForm = CreateDesktopForm();
             MainForm = CreateTaskBarForm();
+            TaskBarFormInstance = MainForm;
 
             DesktopForm.FormClosed += OnFormClosed;
             MainForm.FormClosed += OnFormClosed;
 
             DesktopForm.Show();
             MainForm.Show();
+
+            _fullscreenMonitor = new ShellFullscreenMonitor(MainForm);
         }
 
         private void OnFormClosed(object? sender, FormClosedEventArgs e)
         {
+            _fullscreenMonitor?.Dispose();
+            _fullscreenMonitor = null;
+
             if (DesktopForm.IsDisposed && MainForm.IsDisposed)
             {
                 ExitThread();
@@ -66,6 +78,7 @@ namespace ExplorerRevolution.UI
             TaskBarForm.TopMost = true;
             TaskBarForm.ShowInTaskbar = false;
             Helpers.HideFromAltTab(TaskBarForm.Handle);
+            Helpers.SetNoActivate(TaskBarForm.Handle);
 
             TaskBarForm.Show();
 
@@ -85,7 +98,8 @@ namespace ExplorerRevolution.UI
             TaskBarForm.Controls.Add(TaskBarXamlHost);
             TaskBarXamlHost.AutoSize = false;
             TaskBarXamlHost.Dock = DockStyle.Fill;
-            TaskBarXamlHost.Child = new TaskBar();
+            _taskbarPage = new TaskBar();
+            TaskBarXamlHost.Child = _taskbarPage;
 
             return TaskBarForm;
         }
