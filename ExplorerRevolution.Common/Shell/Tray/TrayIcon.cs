@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.CompilerServices;
+using ExplorerRevolution.Common;
 using static ExplorerRevolution.Common.NativeMethods;
 using static ExplorerRevolution.Common.Shell.Tray.TrayInterop;
 
@@ -275,6 +276,69 @@ namespace ExplorerRevolution.Common.Shell.Tray
                 if (Version >= 3)
                 {
                     SendMessage(WM_CONTEXTMENU);
+                }
+            }
+        }
+
+        /// <summary>通知源窗口取消当前菜单/捕获状态,等价于 Explorer 切换托盘项时的清理。</summary>
+        public void CancelInteraction()
+        {
+            if (!RemoveIfInvalid())
+            {
+                // Match Explorer's leave/close sequence before cancelling the owner.
+                IconMouseLeave();
+
+                // Also notify the owner window directly. Some Win32 applications keep
+                // their context menu on a separate modal loop and do not close it until
+                // the owner receives WM_CANCELMODE.
+                NativeMethods.SendMessage(HWnd, WM_CANCELMODE, IntPtr.Zero, IntPtr.Zero);
+                IntPtr popup = GetLastActivePopup(HWnd);
+                if (popup != IntPtr.Zero && popup != HWnd && IsWindow(popup))
+                {
+                    NativeMethods.SendMessage(popup, WM_CANCELMODE, IntPtr.Zero, IntPtr.Zero);
+                    NativeMethods.SendMessage(popup, WM_NCACTIVATE, IntPtr.Zero, IntPtr.Zero);
+                    NativeMethods.SendMessage(popup, WM_KILLFOCUS, IntPtr.Zero, IntPtr.Zero);
+                }
+
+                // Custom tray menus (Steam, Lyricify, QQ) may not be returned by
+                // GetLastActivePopup. If the foreground window still belongs to
+                // this icon's process, cancel that popup as well.
+                IntPtr foreground = GetForegroundWindow();
+                GetWindowThreadProcessId(HWnd, out uint ownerPid);
+                GetWindowThreadProcessId(foreground, out uint foregroundPid);
+                if (foreground != IntPtr.Zero && foreground != HWnd &&
+                    foregroundPid != 0 && foregroundPid == ownerPid &&
+                    foreground != popup && IsWindow(foreground))
+                {
+                    NativeMethods.SendMessage(foreground, WM_CANCELMODE, IntPtr.Zero, IntPtr.Zero);
+                    NativeMethods.SendMessage(foreground, WM_NCACTIVATE, IntPtr.Zero, IntPtr.Zero);
+                    NativeMethods.SendMessage(foreground, WM_KILLFOCUS, IntPtr.Zero, IntPtr.Zero);
+                }
+
+                // Steam and a few Chromium/Qt tray clients render their context
+                // menu from a helper process, so the foreground popup is not in
+                // the tray owner's PID. WM_CANCELMODE is safe to send cross-process
+                // and asks that popup to release capture without stealing focus from
+                // the window the user just clicked.
+                if (foreground != IntPtr.Zero && foreground != HWnd &&
+                    foregroundPid != 0 && foregroundPid != ownerPid &&
+                    foreground != popup && IsWindow(foreground))
+                {
+                    NativeMethods.SendMessage(foreground, WM_CANCELMODE, IntPtr.Zero, IntPtr.Zero);
+
+                    // Menu windows are WS_POPUP; deactivating only that window
+                    // mirrors Explorer's dismissal while leaving a newly focused
+                    // normal application window untouched.
+                    if ((GetWindowLong(foreground, GWL_STYLE) & WS_POPUP) != 0)
+                    {
+                        NativeMethods.SendMessage(foreground, WM_NCACTIVATE, IntPtr.Zero, IntPtr.Zero);
+                        NativeMethods.SendMessage(foreground, WM_KILLFOCUS, IntPtr.Zero, IntPtr.Zero);
+                    }
+                }
+                SendMessage(WM_CANCELMODE);
+                if (Version > 3)
+                {
+                    SendMessage((uint)NIN.POPUPCLOSE);
                 }
             }
         }

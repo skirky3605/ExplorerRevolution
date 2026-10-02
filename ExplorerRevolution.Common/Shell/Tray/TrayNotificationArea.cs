@@ -208,6 +208,10 @@ namespace ExplorerRevolution.Common.Shell.Tray
             if (trayIcon == null)
             {
                 trayIcon = new TrayIcon(RemoveIcon);
+                // Explorer sends the context-menu notification for version 3
+                // clients as well. Enumeration of existing icons does not expose
+                // NOTIFYICON_VERSION, so use v3 until NIM_SETVERSION arrives.
+                trayIcon.Version = data.uVersion > 0 ? data.uVersion : 3;
             }
 
             if ((data.uFlags & NIF.STATE) != 0)
@@ -321,12 +325,12 @@ namespace ExplorerRevolution.Common.Shell.Tray
             });
         }
 
-        private IntPtr OnIconDataRequest(int message, uint hWnd, uint uID, Guid guidItem)
+        private IntPtr OnIconDataRequest(int message, IntPtr hWnd, uint uID, Guid guidItem)
         {
             foreach (TrayIcon ti in Icons)
             {
                 if ((guidItem != Guid.Empty && guidItem == ti.GUID) ||
-                    (ti.HWnd == new IntPtr(hWnd) && ti.UID == uID))
+                    (ti.HWnd == hWnd && ti.UID == uID))
                 {
                     Rectangle rect = ti.Placement;
                     if (rect.Width <= 0 || rect.Height <= 0)

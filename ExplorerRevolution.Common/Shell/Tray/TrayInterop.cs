@@ -86,11 +86,11 @@ namespace ExplorerRevolution.Common.Shell.Tray
         public struct NOTIFYICONDATA
         {
             public int cbSize;
-            public uint hWnd;
+            public IntPtr hWnd;
             public uint uID;
             public NIF uFlags;
             public uint uCallbackMessage;
-            public uint hIcon;
+            public IntPtr hIcon;
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
             public string szTip;
             public int dwState;
@@ -100,6 +100,29 @@ namespace ExplorerRevolution.Common.Shell.Tray
             public uint uVersion;
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
             public string szInfoTitle;
+            public NIIF dwInfoFlags;
+            public Guid guidItem;
+            public IntPtr hBalloonIcon;
+        }
+
+        // WM_COPYDATA preserves the sender's native layout. A 32-bit tray
+        // process therefore sends the pointer fields at 4-byte alignment even
+        // when this shell itself is running as a 64-bit process.
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode, Pack = 4)]
+        public struct NOTIFYICONDATA32
+        {
+            public int cbSize;
+            public uint hWnd;
+            public uint uID;
+            public NIF uFlags;
+            public uint uCallbackMessage;
+            public uint hIcon;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string szTip;
+            public int dwState;
+            public int dwStateMask;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string szInfo;
+            public uint uVersion;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] public string szInfoTitle;
             public NIIF dwInfoFlags;
             public Guid guidItem;
             public uint hBalloonIcon;
@@ -115,6 +138,18 @@ namespace ExplorerRevolution.Common.Shell.Tray
 
         [StructLayout(LayoutKind.Sequential)]
         public struct WINNOTIFYICONIDENTIFIER
+        {
+            public int dwMagic;
+            public int dwMessage;
+            public int cbSize;
+            public int dwPadding;
+            public IntPtr hWnd;
+            public uint uID;
+            public Guid guidItem;
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 4)]
+        public struct WINNOTIFYICONIDENTIFIER32
         {
             public int dwMagic;
             public int dwMessage;
@@ -142,7 +177,7 @@ namespace ExplorerRevolution.Common.Shell.Tray
             public string szInfoTitle;
             public NIIF dwInfoFlags;
             public Guid guidItem;
-            public uint hBalloonIcon;
+            public IntPtr hBalloonIcon;
 
             public SafeNotifyIconData()
             {
@@ -151,11 +186,11 @@ namespace ExplorerRevolution.Common.Shell.Tray
             public SafeNotifyIconData(NOTIFYICONDATA nid)
             {
                 cbSize = nid.cbSize;
-                hWnd = new IntPtr(nid.hWnd);
+                hWnd = nid.hWnd;
                 uID = nid.uID;
                 uFlags = nid.uFlags;
                 uCallbackMessage = nid.uCallbackMessage;
-                hIcon = new IntPtr(nid.hIcon);
+                hIcon = nid.hIcon;
                 szTip = nid.szTip;
                 dwState = nid.dwState;
                 dwStateMask = nid.dwStateMask;
@@ -165,6 +200,25 @@ namespace ExplorerRevolution.Common.Shell.Tray
                 dwInfoFlags = nid.dwInfoFlags;
                 guidItem = nid.guidItem;
                 hBalloonIcon = nid.hBalloonIcon;
+            }
+
+            public SafeNotifyIconData(NOTIFYICONDATA32 nid)
+            {
+                cbSize = nid.cbSize;
+                hWnd = new IntPtr(unchecked((int)nid.hWnd));
+                uID = nid.uID;
+                uFlags = nid.uFlags;
+                uCallbackMessage = nid.uCallbackMessage;
+                hIcon = new IntPtr(unchecked((int)nid.hIcon));
+                szTip = nid.szTip;
+                dwState = nid.dwState;
+                dwStateMask = nid.dwStateMask;
+                szInfo = nid.szInfo;
+                uVersion = nid.uVersion;
+                szInfoTitle = nid.szInfoTitle;
+                dwInfoFlags = nid.dwInfoFlags;
+                guidItem = nid.guidItem;
+                hBalloonIcon = new IntPtr(unchecked((int)nid.hBalloonIcon));
             }
         }
 
@@ -225,5 +279,5 @@ namespace ExplorerRevolution.Common.Shell.Tray
     public delegate bool SystrayMessageHandler(uint message, TrayInterop.SafeNotifyIconData data);
 
     /// <summary>图标位置查询回调(Shell_NotifyIconGetRect)。</summary>
-    public delegate IntPtr IconDataRequestHandler(int message, uint hWnd, uint uID, Guid guidItem);
+    public delegate IntPtr IconDataRequestHandler(int message, IntPtr hWnd, uint uID, Guid guidItem);
 }

@@ -220,6 +220,7 @@ namespace ExplorerRevolution.Common
         public const uint EVENT_OBJECT_CREATE = 0x8000;
         public const uint EVENT_OBJECT_DESTROY = 0x8001;
         public const uint EVENT_OBJECT_NAMECHANGE = 0x800C;
+        public const uint EVENT_SYSTEM_FOREGROUND = 0x0003;
         public const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
 
         [DllImport("user32.dll")]
@@ -371,6 +372,9 @@ namespace ExplorerRevolution.Common
 
         [DllImport("user32.dll")]
         public static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr WindowFromPoint(POINT point);
 
         [DllImport("user32.dll")]
         public static extern bool IsWindow(IntPtr hWnd);
@@ -710,6 +714,10 @@ namespace ExplorerRevolution.Common
         public const uint WM_MOUSEHOVER = 0x02A1;
         public const uint WM_MOUSELEAVE = 0x02A3;
         public const uint WM_CONTEXTMENU = 0x007B;
+        public const uint WM_CANCELMODE = 0x001F;
+        public const uint WM_KILLFOCUS = 0x0008;
+        public const uint WM_NCACTIVATE = 0x0086;
+        public const uint WM_CLOSE = 0x0010;
 
         public const uint MK_LBUTTON = 0x0001;
         public const uint MK_RBUTTON = 0x0002;

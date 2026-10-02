@@ -11,6 +11,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -42,6 +43,11 @@ namespace ExplorerRevolution.UI
         {
             this.InitializeComponent();
             this.Unloaded += TaskBar_Unloaded;
+
+            TrayOverflowPage.OpenRequested += OpenTrayIconFromOverflow;
+            TrayOverflowPage.PinRequested += PinTrayIconFromOverflow;
+            TrayOverflowPage.RightRequested += RightTrayIconFromOverflow;
+            TrayOverflowPage.ContextDismissRequested += DismissTrayContextInteraction;
 
             _ = LoadPinnedAppsAsync();
 
@@ -309,11 +315,17 @@ namespace ExplorerRevolution.UI
         private WindowsTasksService _tasksService;
         private TrayNotificationArea _trayArea;
         private readonly Dictionary<TrayIcon, TrayIconUiHost> _trayIconUis = new();
-        private ITrayOverflowHost _trayOverflow;
-        private bool _usingFlyoutHost;
         private DispatcherTimer _clockTimer;
         private DispatcherTimer _imeTimer;
         private bool _trayInitialized;
+        private TrayIcon _lastContextIcon;
+        private LowLevelMouseProc _flyoutMouseProc;
+        private IntPtr _flyoutMouseHook;
+        private volatile bool _flyoutHookActive;
+        private WinEventDelegate _flyoutForegroundProc;
+        private IntPtr _flyoutForegroundHook;
+        private DateTime _contextPopupGraceUntilUtc;
+        private IntPtr _contextPopupWindow;
 
         private void TaskBarItemsControl_Loaded(object sender, RoutedEventArgs e)
         {
@@ -628,11 +640,12 @@ namespace ExplorerRevolution.UI
                     _trayArea = null;
                 }
 
-                if (_trayOverflow != null)
-                {
-                    _trayOverflow.Dispose();
-                    _trayOverflow = null;
-                }
+                TrayOverflowPage.OpenRequested -= OpenTrayIconFromOverflow;
+                TrayOverflowPage.PinRequested -= PinTrayIconFromOverflow;
+                TrayOverflowPage.RightRequested -= RightTrayIconFromOverflow;
+                TrayOverflowPage.ContextDismissRequested -= DismissTrayContextInteraction;
+                TrayOverflowFlyout.Hide();
+                UninstallFlyoutMouseHook();
 
                 _trayInitialized = false;
             }
@@ -1276,6 +1289,20 @@ namespace ExplorerRevolution.UI
 
             host.PressedButton = button;
             host.CapturePointer(e.Pointer);
+
+            if (_lastContextIcon != null && _lastContextIcon != host.Icon)
+            {
+                _lastContextIcon.CancelInteraction();
+                _lastContextIcon = null;
+            }
+
+            if (button == TrayMouseButton.Right)
+            {
+                _lastContextIcon = host.Icon;
+                _contextPopupGraceUntilUtc = DateTime.UtcNow.AddMilliseconds(1200);
+                CaptureContextPopupLater(host.Icon);
+            }
+
             host.Icon.IconMouseDown(button);
             e.Handled = true;
         }
@@ -1363,15 +1390,9 @@ namespace ExplorerRevolution.UI
                     return;
                 }
 
-                if (_trayOverflow == null)
+                if (TrayOverflowFlyout.IsOpen)
                 {
-                    _trayOverflow = new TrayOverflowFlyoutWindow();
-                    _usingFlyoutHost = true;
-                }
-
-                if (_trayOverflow.Visible)
-                {
-                    _trayOverflow.Hide();
+                    TrayOverflowFlyout.Hide();
                     return;
                 }
 
@@ -1381,33 +1402,9 @@ namespace ExplorerRevolution.UI
                     return;
                 }
 
-                Rectangle? anchor = GetTrayOverflowAnchorRect();
-                if (!anchor.HasValue)
-                {
-                    return;
-                }
-
-                float dpiScale = GetTaskBarDpiScale();
-                _trayOverflow.ShowOverflow(
-                    anchor.Value,
-                    dpiScale,
-                    icons,
-                    OpenTrayIconFromOverflow,
-                    PinTrayIconFromOverflow);
-
-                // 独立线程 XAML Island 初始化失败时回退旧 WinForms 浮窗,保证功能可用
-                if (_usingFlyoutHost && !_trayOverflow.IsAvailable)
-                {
-                    _trayOverflow.Dispose();
-                    _trayOverflow = new TrayOverflowPopupForm();
-                    _usingFlyoutHost = false;
-                    _trayOverflow.ShowOverflow(
-                        anchor.Value,
-                        dpiScale,
-                        icons,
-                        OpenTrayIconFromOverflow,
-                        PinTrayIconFromOverflow);
-                }
+                TrayOverflowPage.SetIcons(icons);
+                TrayOverflowFlyout.ShowAt(Button_TbRbBkgAppArea_Front);
+                InstallFlyoutMouseHook();
             }
             catch
             {
@@ -1419,9 +1416,17 @@ namespace ExplorerRevolution.UI
         {
             try
             {
-                if (_trayOverflow != null && _trayOverflow.Visible && _trayArea != null)
+                if (TrayOverflowFlyout.IsOpen && _trayArea != null)
                 {
-                    _trayOverflow.RefreshIcons(_trayArea.Icons.Where(i => !i.IsPinned).ToList());
+                    var icons = _trayArea.Icons.Where(i => !i.IsPinned).ToList();
+                    if (icons.Count == 0)
+                    {
+                        TrayOverflowFlyout.Hide();
+                    }
+                    else
+                    {
+                        TrayOverflowPage.SetIcons(icons);
+                    }
                 }
             }
             catch
@@ -1437,7 +1442,12 @@ namespace ExplorerRevolution.UI
                 return;
             }
 
-            _trayOverflow?.Hide();
+            if (_lastContextIcon != null && _lastContextIcon != icon)
+            {
+                CancelCapturedContextPopup();
+                _lastContextIcon.CancelInteraction();
+            }
+            _lastContextIcon = null;
             icon.IconMouseDown(TrayMouseButton.Left);
             icon.IconMouseUp(TrayMouseButton.Left);
         }
@@ -1447,50 +1457,198 @@ namespace ExplorerRevolution.UI
             _trayArea?.SetPinned(icon, true);
         }
 
-        private Rectangle? GetTrayOverflowAnchorRect()
+        private void RightTrayIconFromOverflow(TrayIcon icon)
+        {
+            if (icon == null)
+            {
+                return;
+            }
+
+            // 保持溢出 Flyout 打开,只清理上一个图标的菜单/捕获状态,
+            // 再把右键消息交给当前图标。
+            CancelCapturedContextPopup();
+            _lastContextIcon?.CancelInteraction();
+            _lastContextIcon = icon;
+            _contextPopupGraceUntilUtc = DateTime.UtcNow.AddMilliseconds(1200);
+            icon.IconMouseDown(TrayMouseButton.Right);
+            icon.IconMouseUp(TrayMouseButton.Right);
+            CaptureContextPopupLater(icon);
+        }
+
+        private async void CaptureContextPopupLater(TrayIcon icon)
         {
             try
             {
-                var transform = Button_TbRbBkgAppArea_Front.TransformToVisual(null);
-                var origin = transform.TransformPoint(new Windows.Foundation.Point(0, 0));
-
-                var form = ShellContext.TaskBarFormInstance;
-                if (form == null || form.IsDisposed)
+                await Task.Delay(150);
+                if (_lastContextIcon != icon)
                 {
-                    return null;
+                    return;
                 }
 
-                return new Rectangle(
-                    form.Left + (int)Math.Round(origin.X),
-                    form.Top + (int)Math.Round(origin.Y),
-                    (int)Math.Round(Button_TbRbBkgAppArea_Front.ActualWidth),
-                    (int)Math.Round(Button_TbRbBkgAppArea_Front.ActualHeight));
+                IntPtr foreground = GetForegroundWindow();
+                if (foreground == IntPtr.Zero)
+                {
+                    return;
+                }
+
+                GetWindowThreadProcessId(foreground, out uint popupPid);
+                uint ownPid = (uint)Process.GetCurrentProcess().Id;
+                if (popupPid != 0 && popupPid != ownPid && IsWindow(foreground) &&
+                    (GetWindowLong(foreground, GWL_STYLE) & WS_POPUP) != 0)
+                {
+                    _contextPopupWindow = foreground;
+                }
             }
             catch
             {
-                return null;
+                // Popup discovery is best-effort; TrayIcon cancellation remains.
             }
         }
 
-        private float GetTaskBarDpiScale()
+        private void CancelCapturedContextPopup()
         {
-            try
+            IntPtr popup = _contextPopupWindow;
+            _contextPopupWindow = IntPtr.Zero;
+            if (popup == IntPtr.Zero || !IsWindow(popup))
             {
-                var form = ShellContext.TaskBarFormInstance;
-                if (form == null || form.IsDisposed)
-                {
-                    return 1f;
-                }
+                return;
+            }
 
-                using (var g = form.CreateGraphics())
+            SendMessage(popup, WM_CANCELMODE, IntPtr.Zero, IntPtr.Zero);
+            if ((GetWindowLong(popup, GWL_STYLE) & WS_POPUP) != 0)
+            {
+                SendMessage(popup, WM_NCACTIVATE, IntPtr.Zero, IntPtr.Zero);
+                SendMessage(popup, WM_KILLFOCUS, IntPtr.Zero, IntPtr.Zero);
+                PostMessage(popup, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+            }
+        }
+
+        private void DismissTrayContextInteraction()
+        {
+            CancelCapturedContextPopup();
+            _lastContextIcon?.CancelInteraction();
+            _lastContextIcon = null;
+        }
+
+        private void TrayOverflowFlyout_Closed(object sender, object e)
+        {
+            UninstallFlyoutMouseHook();
+            TrayOverflowPage.ResetIconInteractions();
+            DismissTrayContextInteraction();
+        }
+
+        private void InstallFlyoutMouseHook()
+        {
+            if (_flyoutMouseHook != IntPtr.Zero || _flyoutForegroundHook != IntPtr.Zero)
+            {
+                return;
+            }
+
+            _flyoutMouseProc = FlyoutMouseHookProc;
+            _flyoutMouseHook = SetWindowsHookEx(WH_MOUSE_LL, _flyoutMouseProc, GetModuleHandle(null), 0);
+            _flyoutHookActive = _flyoutMouseHook != IntPtr.Zero;
+
+            // Mouse light-dismiss is not raised for every app-owned popup (notably
+            // Electron/Qt tray menus). Observe the real foreground window as well,
+            // so a focus transition away from this shell always closes the Flyout.
+            _flyoutForegroundProc = FlyoutForegroundChanged;
+            _flyoutForegroundHook = SetWinEventHook(
+                EVENT_SYSTEM_FOREGROUND,
+                EVENT_SYSTEM_FOREGROUND,
+                IntPtr.Zero,
+                _flyoutForegroundProc,
+                0,
+                0,
+                WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+            _flyoutHookActive = _flyoutMouseHook != IntPtr.Zero || _flyoutForegroundHook != IntPtr.Zero;
+        }
+
+        private void UninstallFlyoutMouseHook()
+        {
+            _flyoutHookActive = false;
+            if (_flyoutMouseHook != IntPtr.Zero)
+            {
+                UnhookWindowsHookEx(_flyoutMouseHook);
+                _flyoutMouseHook = IntPtr.Zero;
+            }
+            if (_flyoutForegroundHook != IntPtr.Zero)
+            {
+                UnhookWinEvent(_flyoutForegroundHook);
+                _flyoutForegroundHook = IntPtr.Zero;
+            }
+            _flyoutMouseProc = null;
+            _flyoutForegroundProc = null;
+        }
+
+        private void FlyoutForegroundChanged(
+            IntPtr hook,
+            uint eventType,
+            IntPtr hwnd,
+            int idObject,
+            int idChild,
+            uint eventThread,
+            uint eventTime)
+        {
+            if (!_flyoutHookActive || hwnd == IntPtr.Zero)
+            {
+                return;
+            }
+
+            GetWindowThreadProcessId(hwnd, out uint foregroundPid);
+            uint ownPid = (uint)Process.GetCurrentProcess().Id;
+            if (foregroundPid == 0 || foregroundPid == ownPid)
+            {
+                return;
+            }
+
+            // Opening a tray context menu intentionally transfers foreground to
+            // the app-owned popup (often a separate helper process). It is not a
+            // Flyout light-dismiss event; hiding the Flyout here would immediately
+            // run Closed -> CancelInteraction and close the menu we just opened.
+            if (_lastContextIcon != null &&
+                DateTime.UtcNow < _contextPopupGraceUntilUtc)
+            {
+                return;
+            }
+
+            _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                if (TrayOverflowFlyout.IsOpen)
                 {
-                    return g.DpiX / 96f;
+                    TrayOverflowFlyout.Hide();
+                }
+            });
+        }
+
+        private IntPtr FlyoutMouseHookProc(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (nCode >= 0 && _flyoutHookActive && lParam != IntPtr.Zero)
+            {
+                uint msg = (uint)wParam;
+                if (msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN)
+                {
+                    MSLLHOOKSTRUCT mouse = (MSLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(MSLLHOOKSTRUCT));
+                    IntPtr target = WindowFromPoint(mouse.pt);
+                    GetWindowThreadProcessId(target, out uint targetPid);
+                    uint ownPid = (uint)Process.GetCurrentProcess().Id;
+
+                    // The XAML Flyout popup and taskbar are our process. Any click
+                    // landing in another process is a light-dismiss action, including
+                    // clicks on an app-owned context menu.
+                    if (targetPid != ownPid)
+                    {
+                        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                        {
+                            if (TrayOverflowFlyout.IsOpen)
+                            {
+                                TrayOverflowFlyout.Hide();
+                            }
+                        });
+                    }
                 }
             }
-            catch
-            {
-                return 1f;
-            }
+
+            return CallNextHookEx(_flyoutMouseHook, nCode, wParam, lParam);
         }
 
         private Rectangle? GetTrayIconScreenRect(TrayIcon icon)

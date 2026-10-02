@@ -73,8 +73,9 @@ namespace ExplorerRevolution.UI
         {
             var TaskBarForm = new Form();
             TaskBarForm.FormBorderStyle = FormBorderStyle.None;
-            TaskBarForm.BackColor = Color.LimeGreen;
-            TaskBarForm.TransparencyKey = Color.LimeGreen;
+            // Keep the host non-layered so DWM can provide the Windows 11 Mica backdrop
+            // to the taskbar and to Flyout content using HostBackdrop Acrylic.
+            TaskBarForm.BackColor = Color.Black;
             TaskBarForm.TopMost = true;
             TaskBarForm.ShowInTaskbar = false;
             Helpers.HideFromAltTab(TaskBarForm.Handle);
@@ -93,6 +94,7 @@ namespace ExplorerRevolution.UI
             TaskBarForm.Height = taskBarHeight;
             TaskBarForm.Left = screen.Left;
             TaskBarForm.Top = screen.Bottom - taskBarHeight;
+            Helpers.SetMicaBackdrop(TaskBarForm.Handle);
 
             WindowsXamlHost TaskBarXamlHost = new WindowsXamlHost();
             TaskBarForm.Controls.Add(TaskBarXamlHost);

@@ -16,44 +16,55 @@ using Windows.UI.Xaml.Media.Imaging;
 namespace ExplorerRevolution.UI
 {
     /// <summary>
-    /// 托盘溢出面板的 UWP Flyout 页面:Win11 风格圆角卡片,横向(可换行)排列
-    /// 非常驻图标;hover 显示图钉按钮,左键打开、右键转发给应用。
-    /// 运行在独立 XAML Island 线程上,事件通过宿主转发回主线程。
+    /// 托盘溢出面板的系统 Flyout 内容容器,按行排列非常驻图标。
+    /// 左键打开、右键转发给应用,悬停时提供固定操作。
     /// </summary>
-    public sealed partial class TrayOverflowFlyoutPage : Page
+    public sealed partial class TrayOverflowFlyoutPage : StackPanel
     {
-        private const double ItemSize = 44;
-        private const double ItemSpacing = 4;
-        private const double CardPadding = 8;
-        private const double CardBorder = 2;
-        private const double ArrowZone = 8;
-        private const int MaxItemsPerRow = 8;
+        private const double ItemSize = 48;
+        private const double ItemSpacing = 6;
+        private const int MaxItemsPerRow = 5;
+        private const double FlyoutPadding = 0;
 
         private readonly Dictionary<TrayIcon, FlyoutIconItem> _items =
             new Dictionary<TrayIcon, FlyoutIconItem>();
 
         public event Action<TrayIcon> OpenRequested;
         public event Action<TrayIcon> PinRequested;
+        public event Action<TrayIcon> RightRequested;
+        public event Action ContextDismissRequested;
 
         public TrayOverflowFlyoutPage()
         {
             this.InitializeComponent();
         }
 
-        /// <summary>箭头中心距卡片右缘的偏移(DIP,由宿主按 chevron 位置计算)。</summary>
+        // Retained for source compatibility with the legacy island host; the in-process
+        // taskbar Flyout uses the platform placement arrow and does not need an offset.
         public double ArrowOffsetFromRight
         {
-            set => FlyoutArrow.Margin = new Thickness(0, 0, Math.Max(4, value), 1);
+            set { }
+        }
+
+        public void ResetIconInteractions()
+        {
+            foreach (FlyoutIconItem item in _items.Values.ToList())
+            {
+                item.Icon.IconMouseLeave();
+            }
         }
 
         /// <summary>重新填充图标并返回整个页面的期望尺寸(DIP)。</summary>
         public Size SetIcons(IEnumerable<TrayIcon> icons)
         {
-            foreach (FlyoutIconItem old in _items.Values)
+            foreach (FlyoutIconItem old in _items.Values.ToList())
             {
-                old.OpenClicked -= OnItemOpen;
+                old.Icon.IconMouseLeave();
                 old.PinClicked -= OnItemPin;
-                old.RightTapped -= OnItemRightTapped;
+                old.RightTappedRequested -= OnItemRightTapped;
+                old.OpenPointerReleased -= OnItemOpenPointerReleased;
+                old.RightPointerPressed -= OnItemRightPointerPressed;
+                old.Icon.PropertyChanged -= old.OnIconPropertyChanged;
                 if (old.Parent is Panel panel)
                 {
                     panel.Children.Remove(old);
@@ -68,7 +79,12 @@ namespace ExplorerRevolution.UI
 
             for (int r = 0; r < rows; r++)
             {
-                var row = new StackPanel { Orientation = Orientation.Horizontal };
+                var row = new StackPanel
+                {
+                    Height = ItemSize,
+                    Orientation = Orientation.Horizontal,
+                    VerticalAlignment = VerticalAlignment.Top
+                };
                 RowsPanel.Children.Add(row);
 
                 for (int c = 0; c < MaxItemsPerRow; c++)
@@ -84,9 +100,11 @@ namespace ExplorerRevolution.UI
                     {
                         Margin = new Thickness(0, 0, ItemSpacing, 0)
                     };
-                    item.OpenClicked += OnItemOpen;
                     item.PinClicked += OnItemPin;
-                    item.RightTapped += OnItemRightTapped;
+                    item.RightTappedRequested += OnItemRightTapped;
+                    item.OpenPointerReleased += OnItemOpenPointerReleased;
+                    item.RightPointerPressed += OnItemRightPointerPressed;
+                    item.Icon.PropertyChanged += item.OnIconPropertyChanged;
                     ToolTipService.SetToolTip(item, string.IsNullOrEmpty(icon.Title) ? icon.Identifier : icon.Title);
                     row.Children.Add(item);
                     _items[icon] = item;
@@ -96,17 +114,16 @@ namespace ExplorerRevolution.UI
             }
 
             int maxInRow = Math.Min(list.Count, MaxItemsPerRow);
-            double cardWidth = maxInRow * (ItemSize + ItemSpacing) + CardPadding * 2 + CardBorder;
-            double cardHeight = rows * (ItemSize + ItemSpacing) + CardPadding * 2 + CardBorder;
-
-            double width = Math.Max(40, cardWidth);
-            double height = cardHeight + ArrowZone;
-            LayoutRoot.Width = width;
-            LayoutRoot.Height = height;
+            double width = Math.Max(40, maxInRow * (ItemSize + ItemSpacing) + FlyoutPadding * 2);
+            double height = rows * (ItemSize + ItemSpacing) - ItemSpacing + FlyoutPadding * 2;
+            Width = width;
+            // Let the system FlyoutPresenter measure the rows instead of stretching
+            // the content to the XAML Island's full height.
+            Height = double.NaN;
             return new Size(width, height);
         }
 
-        private void OnItemOpen(FlyoutIconItem item)
+        private void OnItemOpenPointerReleased(FlyoutIconItem item)
         {
             OpenRequested?.Invoke(item.Icon);
         }
@@ -116,16 +133,42 @@ namespace ExplorerRevolution.UI
             PinRequested?.Invoke(item.Icon);
         }
 
-        private void OnItemRightTapped(object sender, RightTappedRoutedEventArgs e)
+        private void OnItemRightPointerPressed(FlyoutIconItem item)
         {
-            if (sender is FlyoutIconItem item && item.Icon != null)
+            if (item?.Icon != null)
             {
-                // 右键直接转发给应用(纯 Win32 消息,跨线程安全);
-                // 面板保持打开,是否关闭由应用决定(与原生一致)
-                item.Icon.IconMouseDown(TrayMouseButton.Right);
-                item.Icon.IconMouseUp(TrayMouseButton.Right);
-                e.Handled = true;
+                // 右键在按下阶段开始协议,避免依赖 RightTapped 手势事件。
+                RightRequested?.Invoke(item.Icon);
             }
+        }
+
+        private void OnItemRightTapped(FlyoutIconItem item)
+        {
+            // Fallback for XAML hosts that expose RightTapped but do not expose
+            // right-button state in PointerPressed.
+            if (item?.Icon != null && !item.RightButtonWasPressed)
+            {
+                RightRequested?.Invoke(item.Icon);
+            }
+        }
+
+        private void RowsPanel_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            // Pointer events from icon items bubble to the root. Walk up from the
+            // original source so only genuine empty Flyout space dismisses the
+            // previous context interaction.
+            DependencyObject current = e.OriginalSource as DependencyObject;
+            while (current != null && current != this)
+            {
+                if (current is FlyoutIconItem)
+                {
+                    return;
+                }
+
+                current = VisualTreeHelper.GetParent(current);
+            }
+
+            ContextDismissRequested?.Invoke();
         }
 
         /// <summary>单个溢出图标项:图标 + hover 高亮 + 右上角图钉按钮。</summary>
@@ -133,13 +176,20 @@ namespace ExplorerRevolution.UI
         {
             public TrayIcon Icon { get; }
 
-            public event Action<FlyoutIconItem> OpenClicked;
             public event Action<FlyoutIconItem> PinClicked;
+            public event Action<FlyoutIconItem> RightPointerPressed;
+            public event Action<FlyoutIconItem> RightTappedRequested;
+
+            public bool RightButtonWasPressed => _rightButtonHandled;
 
             private readonly Border _hoverBackground;
             private readonly Image _iconImage;
             private readonly Button _pinButton;
-            private readonly Button _openButton;
+            private bool _openPointerReleased;
+            private bool _rightPointerPressed;
+            private bool _rightButtonHandled;
+
+            public event Action<FlyoutIconItem> OpenPointerReleased;
 
             public FlyoutIconItem(TrayIcon icon)
             {
@@ -150,7 +200,8 @@ namespace ExplorerRevolution.UI
                 _hoverBackground = new Border
                 {
                     CornerRadius = new CornerRadius(7),
-                    Background = null
+                    Background = null,
+                    IsHitTestVisible = false
                 };
                 Children.Add(_hoverBackground);
 
@@ -162,20 +213,6 @@ namespace ExplorerRevolution.UI
                     VerticalAlignment = VerticalAlignment.Center
                 };
                 Children.Add(_iconImage);
-
-                _openButton = new Button
-                {
-                    Margin = new Thickness(0),
-                    Padding = new Thickness(0),
-                    Background = null,
-                    BorderBrush = null,
-                    BorderThickness = new Thickness(0),
-                    HorizontalAlignment = HorizontalAlignment.Stretch,
-                    VerticalAlignment = VerticalAlignment.Stretch,
-                    IsTabStop = false
-                };
-                _openButton.Click += (s, e) => OpenClicked?.Invoke(this);
-                Children.Add(_openButton);
 
                 _pinButton = new Button
                 {
@@ -198,23 +235,30 @@ namespace ExplorerRevolution.UI
                     }
                 };
                 _pinButton.Click += (s, e) => PinClicked?.Invoke(this);
+                _pinButton.PointerPressed += (s, e) => e.Handled = true;
+                _pinButton.PointerReleased += (s, e) => e.Handled = true;
                 Children.Add(_pinButton);
 
                 PointerEntered += OnPointerEntered;
                 PointerExited += OnPointerExited;
+                PointerMoved += OnPointerMoved;
+                RightTapped += OnRightTappedEvent;
+                PointerPressed += OnOpenPointerPressed;
+                PointerReleased += OnOpenPointerReleased;
             }
 
             public async Task LoadIconAsync()
             {
                 try
                 {
-                    if (Icon.HIcon == IntPtr.Zero)
+                    IntPtr hIcon = Icon.HIcon;
+                    if (hIcon == IntPtr.Zero)
                     {
                         return;
                     }
 
-                    var bitmap = await HIconToBitmapImageAsync(Icon.HIcon);
-                    if (bitmap != null)
+                    var bitmap = await HIconToBitmapImageAsync(hIcon);
+                    if (bitmap != null && Icon.HIcon == hIcon)
                     {
                         _iconImage.Source = bitmap;
                     }
@@ -227,14 +271,78 @@ namespace ExplorerRevolution.UI
 
             private void OnPointerEntered(object sender, PointerRoutedEventArgs e)
             {
-                _hoverBackground.Background = new SolidColorBrush(Color.FromArgb(0x33, 0xFF, 0xFF, 0xFF));
+                _hoverBackground.Background = new SolidColorBrush(Color.FromArgb(0x24, 0x80, 0x80, 0x80));
                 _pinButton.Visibility = Visibility.Visible;
+                Icon.IconMouseEnter();
             }
 
             private void OnPointerExited(object sender, PointerRoutedEventArgs e)
             {
                 _hoverBackground.Background = null;
                 _pinButton.Visibility = Visibility.Collapsed;
+                Icon.IconMouseLeave();
+            }
+
+            private void OnPointerMoved(object sender, PointerRoutedEventArgs e)
+            {
+                Icon.IconMouseMove();
+            }
+
+            private void OnOpenPointerPressed(object sender, PointerRoutedEventArgs e)
+            {
+                var point = e.GetCurrentPoint(this);
+                if (point.Properties.IsLeftButtonPressed)
+                {
+                    _rightPointerPressed = false;
+                    _openPointerReleased = true;
+                    CapturePointer(e.Pointer);
+                    e.Handled = true;
+                }
+                else if (point.Properties.IsRightButtonPressed)
+                {
+                    _rightPointerPressed = true;
+                    _rightButtonHandled = true;
+                    CapturePointer(e.Pointer);
+                    e.Handled = true;
+                    RightPointerPressed?.Invoke(this);
+                }
+            }
+
+            private void OnOpenPointerReleased(object sender, PointerRoutedEventArgs e)
+            {
+                if (!_openPointerReleased)
+                {
+                    if (_rightPointerPressed)
+                    {
+                        _rightPointerPressed = false;
+                        ReleasePointerCapture(e.Pointer);
+                        e.Handled = true;
+                    }
+                    return;
+                }
+
+                _openPointerReleased = false;
+                ReleasePointerCapture(e.Pointer);
+                OpenPointerReleased?.Invoke(this);
+                e.Handled = true;
+            }
+
+            private void OnRightTappedEvent(object sender, RightTappedRoutedEventArgs e)
+            {
+                if (!_rightButtonHandled)
+                {
+                    RightTappedRequested?.Invoke(this);
+                }
+                _rightButtonHandled = false;
+                e.Handled = true;
+            }
+
+            public void OnIconPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+            {
+                if (e.PropertyName == nameof(TrayIcon.HIcon))
+                {
+                    _ = LoadIconAsync();
+                }
             }
 
             private static async Task<BitmapImage> HIconToBitmapImageAsync(IntPtr hIcon)

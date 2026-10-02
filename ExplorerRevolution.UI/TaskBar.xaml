@@ -30,138 +30,178 @@
                 CornerRadius="0"
                 IsEnabled="False" />
 
-            <!-- 居中区域:开始 / 任务视图 / 固定+运行应用(Win11 风格) -->
+            <!--  居中区域:开始 / 任务视图 / 固定+运行应用(Win11 风格)  -->
             <Grid
                 x:Name="TaskBarCenterHost"
                 Grid.Column="0"
                 SizeChanged="TaskBarCenterHost_SizeChanged">
                 <StackPanel
                     x:Name="TaskBarCenterStack"
-                    VerticalAlignment="Center"
                     HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
                     Orientation="Horizontal"
                     SizeChanged="TaskBarCenterStack_SizeChanged">
-                <Button
-                    x:Name="StartButton"
-                    Width="48"
-                    Height="48"
-                    Padding="0"
-                    Background="Transparent"
-                    BorderBrush="Transparent"
-                    Click="StartButton_Click"
-                    CornerRadius="8"
-                    ToolTipService.ToolTip="开始">
-                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="18" Glyph="&#xE700;" />
-                </Button>
-                <Button
-                    x:Name="TaskViewButton"
-                    Width="48"
-                    Height="48"
-                    Padding="0"
-                    Background="Transparent"
-                    BorderBrush="Transparent"
-                    Click="TaskViewButton_Click"
-                    CornerRadius="8"
-                    ToolTipService.ToolTip="任务视图">
-                    <FontIcon FontFamily="Segoe Fluent Icons" FontSize="18" Glyph="&#xE7C4;" />
-                </Button>
-                <GridView
-                    x:Name="TaskBarItemsControl"
-                    Margin="4,1,0,1"
-                    SelectionMode="Extended"
-                    AllowDrop="True"
-                    CanReorderItems="True"
-                    VerticalAlignment="Center"
-                    Height="48"
-                    Loaded="TaskBarItemsControl_Loaded"
-                    ItemClick="TaskBarItemsControl_ItemClick"
-                    IsItemClickEnabled="True"
-                    ItemsSource="{x:Bind taskBarApps, Mode=TwoWay}"
-                    ScrollViewer.BringIntoViewOnFocusChange="False"
-                    ShowsScrollingPlaceholders="False"
-                    ScrollViewer.HorizontalScrollMode="Auto"
-                    ScrollViewer.HorizontalScrollBarVisibility="Hidden"
-                    ScrollViewer.IsVerticalRailEnabled="False"
-                    ScrollViewer.VerticalScrollMode="Disabled"
-                    SelectionChanged="TaskBarItemsControl_SelectionChanged"
-                    ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                    <Button
+                        x:Name="StartButton"
+                        Width="48"
+                        Height="48"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        Click="StartButton_Click"
+                        CornerRadius="8"
+                        ToolTipService.ToolTip="开始">
+                        <FontIcon
+                            FontFamily="Segoe Fluent Icons"
+                            FontSize="18"
+                            Glyph="&#xE700;" />
+                    </Button>
+                    <Button
+                        x:Name="TaskViewButton"
+                        Width="48"
+                        Height="48"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        Click="TaskViewButton_Click"
+                        CornerRadius="8"
+                        ToolTipService.ToolTip="任务视图">
+                        <FontIcon
+                            FontFamily="Segoe Fluent Icons"
+                            FontSize="18"
+                            Glyph="&#xE7C4;" />
+                    </Button>
+                    <GridView
+                        x:Name="TaskBarItemsControl"
+                        Height="48"
+                        Margin="4,1,0,1"
+                        VerticalAlignment="Center"
+                        AllowDrop="True"
+                        CanReorderItems="True"
+                        IsItemClickEnabled="True"
+                        ItemClick="TaskBarItemsControl_ItemClick"
+                        ItemsSource="{x:Bind taskBarApps, Mode=TwoWay}"
+                        Loaded="TaskBarItemsControl_Loaded"
+                        ScrollViewer.BringIntoViewOnFocusChange="False"
+                        ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                        ScrollViewer.HorizontalScrollMode="Auto"
+                        ScrollViewer.IsVerticalRailEnabled="False"
+                        ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                        ScrollViewer.VerticalScrollMode="Disabled"
+                        SelectionChanged="TaskBarItemsControl_SelectionChanged"
+                        SelectionMode="Extended"
+                        ShowsScrollingPlaceholders="False">
 
-                <GridView.ItemContainerTransitions>
-                    <TransitionCollection>
-                        <RepositionThemeTransition IsStaggeringEnabled="False" />
-                        <PopupThemeTransition/>
-                    </TransitionCollection>
-                </GridView.ItemContainerTransitions>
+                        <GridView.ItemContainerTransitions>
+                            <TransitionCollection>
+                                <RepositionThemeTransition IsStaggeringEnabled="False" />
+                                <PopupThemeTransition />
+                            </TransitionCollection>
+                        </GridView.ItemContainerTransitions>
 
-                <GridView.ItemContainerStyle>
-                    <Style TargetType="GridViewItem">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="GridViewItem">
-                                    <GridViewItemPresenter x:Name="Root" CornerRadius="8" Margin="0,1,0,-2"
-                                               DragBackground="Transparent"
-                                              >
-                                    </GridViewItemPresenter>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </GridView.ItemContainerStyle>
+                        <GridView.ItemContainerStyle>
+                            <Style TargetType="GridViewItem">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="GridViewItem">
+                                            <GridViewItemPresenter
+                                                x:Name="Root"
+                                                Margin="0,1,0,-2"
+                                                CornerRadius="8"
+                                                DragBackground="Transparent" />
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </GridView.ItemContainerStyle>
 
-                <GridView.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="0" Height="48" Margin="0,0,0,8" CornerRadius="1" >
-                            <StackPanel.Transitions>
-                                <TransitionCollection>
-                                    <RepositionThemeTransition />
-                                    <PaneThemeTransition/>
-                                </TransitionCollection>
-                            </StackPanel.Transitions>
-                        </StackPanel>
-                    </ItemsPanelTemplate>
-                </GridView.ItemsPanel>
-                <GridView.ItemTemplate>
-                    <DataTemplate x:DataType="data:TaskBarApp">
-                        <Grid MaxWidth="128"
-                Height="40"
-                Padding="0"
-                Background="Transparent"
-                BorderBrush="Transparent"
-                CornerRadius="0"
-                Margin="6,0,6,1">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                                <Image Margin="4,0,1,1"
-                    Width="24"
-                    Height="24"
-                    Source="{x:Bind Icon, Mode=OneWay}" HorizontalAlignment="Center" />
-                                <TextBlock Text="{x:Bind Title, Mode=OneWay}"  VerticalAlignment="Center" Margin="4,0,0,2"  Visibility="{x:Bind ButtonTitleVisibility, Mode=OneWay}"/>
-                            </StackPanel>
-                            <ToggleButton
-                    Width="24"
-                    Height="12"
-                    Background="{ThemeResource AccentFillColorDisabledBrush}" CornerRadius="8"
-                    IsChecked="{x:Bind IsForeground, Mode=OneWay}" Visibility="{x:Bind IsActive, Mode=OneWay}" HorizontalAlignment="Center" VerticalAlignment="Bottom"  Margin="0,0,0,1" IsTabStop="False" >
+                        <GridView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel
+                                    Height="48"
+                                    Margin="0,0,0,8"
+                                    HorizontalAlignment="Center"
+                                    CornerRadius="1"
+                                    Orientation="Horizontal"
+                                    Spacing="0">
+                                    <StackPanel.Transitions>
+                                        <TransitionCollection>
+                                            <RepositionThemeTransition />
+                                            <PaneThemeTransition />
+                                        </TransitionCollection>
+                                    </StackPanel.Transitions>
+                                </StackPanel>
+                            </ItemsPanelTemplate>
+                        </GridView.ItemsPanel>
+                        <GridView.ItemTemplate>
+                            <DataTemplate x:DataType="data:TaskBarApp">
+                                <Grid
+                                    Height="40"
+                                    MaxWidth="128"
+                                    Margin="6,0,6,1"
+                                    Padding="0"
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    CornerRadius="0">
+                                    <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal">
+                                        <Image
+                                            Width="24"
+                                            Height="24"
+                                            Margin="4,0,1,1"
+                                            HorizontalAlignment="Center"
+                                            Source="{x:Bind Icon, Mode=OneWay}" />
+                                        <TextBlock
+                                            Margin="4,0,0,2"
+                                            VerticalAlignment="Center"
+                                            Text="{x:Bind Title, Mode=OneWay}"
+                                            Visibility="{x:Bind ButtonTitleVisibility, Mode=OneWay}" />
+                                    </StackPanel>
+                                    <ToggleButton
+                                        Width="24"
+                                        Height="12"
+                                        Margin="0,0,0,1"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Bottom"
+                                        Background="{ThemeResource AccentFillColorDisabledBrush}"
+                                        CornerRadius="8"
+                                        IsChecked="{x:Bind IsForeground, Mode=OneWay}"
+                                        IsTabStop="False"
+                                        Visibility="{x:Bind IsActive, Mode=OneWay}">
 
-                                <ToggleButton.RenderTransform>
-                                    <ScaleTransform CenterX="12" CenterY="12" ScaleX="0.3333" ScaleY="0.25"/>
-                                </ToggleButton.RenderTransform>
-                            </ToggleButton>
-                            <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent"/>
-                            <Button HorizontalAlignment="Stretch" IsTabStop="False" Margin="-6,-1,-6,-1" VerticalAlignment="Stretch" ClickMode="Release" Click="TaskbarButton_Click" BorderBrush="Transparent" Opacity="0.8" CornerRadius="8" Background="Transparent" ToolTipService.ToolTip="{x:Bind Title}"/>
-                        </Grid>
-                    </DataTemplate>
-                </GridView.ItemTemplate>
-            </GridView>
+                                        <ToggleButton.RenderTransform>
+                                            <ScaleTransform CenterX="12" CenterY="12" ScaleX="0.3333" ScaleY="0.25" />
+                                        </ToggleButton.RenderTransform>
+                                    </ToggleButton>
+                                    <Grid
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Stretch"
+                                        Background="Transparent" />
+                                    <Button
+                                        Margin="-6,-1,-6,-1"
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Stretch"
+                                        Background="Transparent"
+                                        BorderBrush="Transparent"
+                                        Click="TaskbarButton_Click"
+                                        ClickMode="Release"
+                                        CornerRadius="8"
+                                        IsTabStop="False"
+                                        Opacity="0.8"
+                                        ToolTipService.ToolTip="{x:Bind Title}" />
+                                </Grid>
+                            </DataTemplate>
+                        </GridView.ItemTemplate>
+                    </GridView>
                 </StackPanel>
             </Grid>
             <StackPanel
                 Name="TaskBarRightBottomStack"
                 Grid.Column="0"
-                HorizontalAlignment="Right"
                 Height="48"
+                HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
-                SizeChanged="TaskBarRightBottomStack_SizeChanged"
-                Orientation="Horizontal">
+                Orientation="Horizontal"
+                SizeChanged="TaskBarRightBottomStack_SizeChanged">
 
                 <Grid Name="TbRbBkgAppArea" Width="36">
                     <Grid.Transitions>
@@ -199,7 +239,28 @@
                         BorderBrush="Transparent"
                         Click="Button_TbRbBkgAppArea_Front_Click"
                         CornerRadius="8"
-                        Opacity="0.4" />
+                        Opacity="0.4">
+                        <Button.Flyout>
+                            <Flyout
+                                x:Name="TrayOverflowFlyout"
+                                AreOpenCloseAnimationsEnabled="True"
+                                Closed="TrayOverflowFlyout_Closed"
+                                Placement="Top"
+                                ShouldConstrainToRootBounds="False">
+                                <!--<Flyout.FlyoutPresenterStyle>
+                                    <Style TargetType="FlyoutPresenter">
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="BorderBrush" Value="Transparent" />
+                                        <Setter Property="BorderThickness" Value="0" />
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="CornerRadius" Value="14" />
+                                        <Setter Property="IsDefaultShadowEnabled" Value="True" />
+                                    </Style>
+                                </Flyout.FlyoutPresenterStyle>-->
+                                <local:TrayOverflowFlyoutPage x:Name="TrayOverflowPage" />
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
                 </Grid>
                 <StackPanel
                     x:Name="TrayIconsPanel"

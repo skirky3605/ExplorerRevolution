@@ -133,8 +133,16 @@ namespace ExplorerRevolution.Common.Shell.Tray
                     {
                         case 1:
                             // Shell_NotifyIcon 增删改
-                            SHELLTRAYDATA trayData = (SHELLTRAYDATA)Marshal.PtrToStructure(copyData.lpData, typeof(SHELLTRAYDATA));
-                            bool handled = SystrayMessage?.Invoke(trayData.dwMessage, new SafeNotifyIconData(trayData.nid)) ?? false;
+                            if (copyData.lpData == IntPtr.Zero || copyData.cbData < 8)
+                            {
+                                break;
+                            }
+
+                            uint trayMessage = unchecked((uint)Marshal.ReadInt32(copyData.lpData, 4));
+                            SafeNotifyIconData trayIconData = ReadNotifyIconData(
+                                IntPtr.Add(copyData.lpData, 8), copyData.cbData - 8);
+
+                            bool handled = SystrayMessage?.Invoke(trayMessage, trayIconData) ?? false;
                             if (handled)
                             {
                                 return (IntPtr)1;
@@ -143,6 +151,20 @@ namespace ExplorerRevolution.Common.Shell.Tray
 
                         case 3:
                             // Shell_NotifyIconGetRect 位置查询
+                            if (copyData.lpData == IntPtr.Zero || copyData.cbData < 16)
+                            {
+                                break;
+                            }
+
+                            int identifierSize = Marshal.ReadInt32(copyData.lpData, 8);
+                            if (identifierSize > 0 && identifierSize <= copyData.cbData &&
+                                copyData.cbData < Marshal.SizeOf(typeof(WINNOTIFYICONIDENTIFIER)))
+                            {
+                                WINNOTIFYICONIDENTIFIER32 icon32 =
+                                    (WINNOTIFYICONIDENTIFIER32)Marshal.PtrToStructure(copyData.lpData, typeof(WINNOTIFYICONIDENTIFIER32));
+                                return IconDataRequest?.Invoke(icon32.dwMessage, new IntPtr(unchecked((int)icon32.hWnd)), icon32.uID, icon32.guidItem) ?? IntPtr.Zero;
+                            }
+
                             WINNOTIFYICONIDENTIFIER iconData =
                                 (WINNOTIFYICONIDENTIFIER)Marshal.PtrToStructure(copyData.lpData, typeof(WINNOTIFYICONIDENTIFIER));
                             return IconDataRequest?.Invoke(iconData.dwMessage, iconData.hWnd, iconData.uID, iconData.guidItem) ?? IntPtr.Zero;
@@ -168,6 +190,67 @@ namespace ExplorerRevolution.Common.Shell.Tray
             }
 
             return DefWindowProc(hWnd, msg, wParam, lParam);
+        }
+
+        private static SafeNotifyIconData ReadNotifyIconData(IntPtr p, int bytes)
+        {
+            // cbSize is version-dependent and is not a reliable indicator of
+            // pointer width. Probe both native pointer locations and choose the
+            // one that names a live window. This also handles 64-bit clients
+            // sending a legacy (shorter) cbSize.
+            IntPtr hwnd32 = bytes >= 8 ? new IntPtr(unchecked((int)(uint)Marshal.ReadInt32(p, 4))) : IntPtr.Zero;
+            IntPtr hwnd64 = bytes >= 16 ? Marshal.ReadIntPtr(p, 8) : IntPtr.Zero;
+            bool valid32 = hwnd32 != IntPtr.Zero && IsWindow(hwnd32);
+            bool valid64 = hwnd64 != IntPtr.Zero && IsWindow(hwnd64);
+
+            bool is32 = (valid32 && !valid64) ||
+                        (!valid32 && !valid64 && bytes < Marshal.SizeOf(typeof(NOTIFYICONDATA)));
+            int cb = Marshal.ReadInt32(p, 0);
+            int uidOffset = is32 ? 8 : 16;
+            int flagsOffset = is32 ? 12 : 20;
+            int callbackOffset = is32 ? 16 : 24;
+            int iconOffset = is32 ? 20 : 32;
+            int tipOffset = is32 ? 24 : 40;
+            int stateOffset = is32 ? 280 : 296;
+            int stateMaskOffset = is32 ? 284 : 300;
+            int infoOffset = is32 ? 288 : 304;
+            int versionOffset = is32 ? 800 : 816;
+            int infoTitleOffset = is32 ? 804 : 820;
+            int infoFlagsOffset = is32 ? 932 : 948;
+            int guidOffset = is32 ? 936 : 952;
+            int balloonOffset = is32 ? 952 : 968;
+
+            SafeNotifyIconData data = new SafeNotifyIconData
+            {
+                cbSize = cb,
+                hWnd = is32 ? hwnd32 : hwnd64,
+                uID = ReadUInt32(p, uidOffset),
+                uFlags = (NIF)ReadUInt32(p, flagsOffset),
+                uCallbackMessage = ReadUInt32(p, callbackOffset),
+                hIcon = is32 ? new IntPtr(unchecked((int)ReadUInt32(p, iconOffset))) : Marshal.ReadIntPtr(p, iconOffset),
+                szTip = ReadString(p, tipOffset, 128, bytes),
+                dwState = Marshal.ReadInt32(p, stateOffset),
+                dwStateMask = Marshal.ReadInt32(p, stateMaskOffset),
+                szInfo = ReadString(p, infoOffset, 256, bytes),
+                uVersion = ReadUInt32(p, versionOffset),
+                szInfoTitle = ReadString(p, infoTitleOffset, 64, bytes),
+                dwInfoFlags = (NIIF)ReadUInt32(p, infoFlagsOffset),
+                guidItem = bytes >= guidOffset + 16 ? Marshal.PtrToStructure<Guid>(IntPtr.Add(p, guidOffset)) : Guid.Empty,
+                hBalloonIcon = is32 ? new IntPtr(unchecked((int)ReadUInt32(p, balloonOffset))) : Marshal.ReadIntPtr(p, balloonOffset)
+            };
+
+            return data;
+        }
+
+        private static uint ReadUInt32(IntPtr p, int offset)
+        {
+            return unchecked((uint)Marshal.ReadInt32(p, offset));
+        }
+
+        private static string ReadString(IntPtr p, int offset, int chars, int bytes)
+        {
+            int available = Math.Min(chars, Math.Max(0, (bytes - offset) / 2));
+            return available > 0 ? Marshal.PtrToStringUni(IntPtr.Add(p, offset), available)?.TrimEnd('\0') : null;
         }
 
         /// <summary>把未处理的消息转发给真正的 explorer 托盘(例如 AppBar 查询)。</summary>
